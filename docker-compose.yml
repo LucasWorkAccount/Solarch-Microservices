@@ -1,0 +1,17 @@
+﻿services:
+  medical-record-system:
+    image: medical-record-system
+    build:
+      context: .
+      dockerfile: Medical-Record-System/Dockerfile
+
+  medical-record-event-store:
+    image: postgres:16-alpine
+    ports:
+      - 5432:5432
+    volumes:
+      - ~/apps/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=medical-record-event-store
