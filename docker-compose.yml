@@ -8,7 +8,7 @@
   medical-record-event-store:
     image: postgres:16-alpine
     ports:
-      - 5432:5432
+      - 5420:5432
     volumes:
       - ~/apps/postgres:/var/lib/postgresql/data
     environment:
