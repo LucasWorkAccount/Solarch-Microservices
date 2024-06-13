@@ -2,18 +2,26 @@
   medical-record-system:
     image: medical-record-system
     ports:
-      - 8420:8080
+      - "8420:8080"
     build:
       context: .
       dockerfile: Medical-Record-System/Dockerfile
+    networks:
+      - medical-record-system
 
   medical-record-event-store:
     image: postgres:16-alpine
     ports:
-      - 5420:5432
+      - "5420:5432"
     volumes:
       - ~/apps/postgres:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=1234
       - POSTGRES_USER=postgres
       - POSTGRES_DB=medical-record-event-store
+    networks:
+      - medical-record-system
+
+networks:
+  medical-record-system:
+    driver: bridge
