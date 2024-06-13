@@ -1,6 +1,8 @@
 ﻿services:
   medical-record-system:
     image: medical-record-system
+    ports:
+      - 8420:8080
     build:
       context: .
       dockerfile: Medical-Record-System/Dockerfile
