@@ -1,3 +1,4 @@
+
 using Medical_Record_System;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,7 +28,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/medical-records", () => { })
+app.MapGet("/medical-records", async (MedicalRecordEventStoreContext dbContext) =>
+    {
+        var medicalRecords = await dbContext.MedicalRecords.ToListAsync();
+        return Results.Ok(medicalRecords);
+    })
     .WithName("GetMedicalRecords")
     .WithOpenApi();
 
