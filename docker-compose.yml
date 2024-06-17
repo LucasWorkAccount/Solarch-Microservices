@@ -21,7 +21,16 @@
       - POSTGRES_DB=medical-record-event-store
     networks:
       - medical-record-system
+  
+  patientmanagement:
+    image: patientmanagement
+    build:
+      context: .
+      dockerfile: PatientManagement/Dockerfile
+    networks:
+      - medical-record-system
 
 networks:
   medical-record-system:
     driver: bridge
+ 
