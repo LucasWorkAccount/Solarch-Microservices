@@ -35,4 +35,20 @@ app.MapGet("/medical-records", async (MedicalRecordEventStoreContext dbContext) 
     .WithName("GetMedicalRecords")
     .WithOpenApi();
 
+app.MapGet("/medical-records/{uuid}", async (string uuid, MedicalRecordEventStoreContext dbContext) =>
+    {
+        Guid guid;
+        try {
+            guid = new Guid(uuid);
+        }
+        catch (Exception)
+        {
+            throw new ArgumentException("Given uuid is not valid!");
+        }
+        var medicalRecord = await dbContext.MedicalRecords.FirstOrDefaultAsync(e => e.Uuid == guid);
+        return Results.Ok(medicalRecord);
+    })
+    .WithName("GetMedicalRecordByUuid")
+    .WithOpenApi();
+
 app.Run();
