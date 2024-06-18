@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Medical_Record_System;
+﻿namespace Medical_Record_System;
 
 public partial class Event
 {
