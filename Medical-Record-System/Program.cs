@@ -1,4 +1,8 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Medical_Record_System;
+using Medical_Record_System.Entities;
+using Medical_Record_System.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,7 +17,7 @@ IConfiguration configManager = objBuilder.Build();
 var connection = configManager.GetConnectionString("medical-record-event-store");
 
 builder.Services.AddDbContext<MedicalRecordEventStoreContext>(options => options.UseNpgsql(connection));
-builder.Services.AddScoped<IEventHandler, StateEventHandler>();
+builder.Services.AddScoped<IEventRepository, EventRepository>();
 
 var app = builder.Build();
 
@@ -25,15 +29,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/medical-records", async (MedicalRecordEventStoreContext dbContext) =>
-    {
-        var medicalRecords = await dbContext.MedicalRecords.ToListAsync();
-        return Results.Ok(medicalRecords);
-    })
-    .WithName("GetMedicalRecords")
-    .WithOpenApi();
-
-app.MapGet("/medical-records/{uuid}", async (string uuid, MedicalRecordEventStoreContext dbContext) =>
+app.MapGet("/medical-records/{uuid}", async (string uuid, IEventRepository eventRepository) =>
     {
         Guid guid;
         try {
@@ -43,28 +39,53 @@ app.MapGet("/medical-records/{uuid}", async (string uuid, MedicalRecordEventStor
         {
             throw new ArgumentException("Given uuid is not valid!");
         }
-        var medicalRecord = await dbContext.MedicalRecords.FirstOrDefaultAsync(e => e.Uuid == guid);
+
+        var medicalRecordEvents = await eventRepository.GetEventsByUuid(guid);
+        var medicalRecord = new MedicalRecordCollection(guid, medicalRecordEvents).MedicalRecords[0];
         return Results.Ok(medicalRecord);
     })
     .WithName("GetMedicalRecordByUuid")
     .WithOpenApi();
 
-app.MapPost("medical-records/{uuid}", async (string uuid, HttpRequest request, MedicalRecordEventStoreContext dbContext, IEventHandler statesEventHandler) =>
+app.MapPost("medical-records", async (HttpRequest request, IEventRepository eventRepository) =>
     {
         using var reader = new StreamReader(request.Body);
+        var json = JsonNode.Parse(await reader.ReadToEndAsync());
+        var uuid = Guid.NewGuid();
+        json!["uuid"] = uuid.ToString();
+        json!["record"] = "[]";
+        
+        var @event = new Event
+        {
+            Uuid = uuid,
+            Body = json.ToJsonString(),
+            Type = "MedicalRecordCreated",
+            InsertedAt = DateTime.Now
+        };
+
+        await eventRepository.CreateEvent(@event);
+        
+        return Results.Ok("Medical record successfully initialised!");
+    })
+    .WithName("CreateMedicalRecord")
+    .WithOpenApi();
+
+app.MapPut("medical-records/{uuid}", async (string uuid, HttpRequest request, IEventRepository eventRepository) =>
+    {
+        using var reader = new StreamReader(request.Body);
+        var json = JsonNode.Parse(await reader.ReadToEndAsync());
         
         var @event = new Event
         {
             Uuid = new Guid(uuid),
-            Body = await reader.ReadToEndAsync(),
+            Body = json!.ToJsonString(),
             Type = "MedicalRecordAppendage",
             InsertedAt = DateTime.Now
         };
-        await dbContext.Events.AddAsync(@event);
-        await dbContext.SaveChangesAsync();
         
-        await statesEventHandler.Apply(@event);
-        return Results.Ok("Appended medical record successfully!");
+        await eventRepository.CreateEvent(@event);
+        
+        return Results.Ok("Medical record successfully appended!");
     })
     .WithName("AppendMedicalRecord")
     .WithOpenApi();
