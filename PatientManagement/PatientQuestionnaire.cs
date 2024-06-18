@@ -29,7 +29,7 @@ class PatientQuestionnaire
 
         byte[] messageBodyBytes = Encoding.UTF8.GetBytes("test string");
         channel.BasicPublish(exchangeName, routingKey, null, messageBodyBytes);
-        
+
         channel.Close();
         connection.Close();
     }
