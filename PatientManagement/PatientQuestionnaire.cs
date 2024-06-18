@@ -1,22 +1,36 @@
-﻿using RabbitMQ.Client;
+﻿using System;
+using RabbitMQ.Client;
+using System.Text;
 
-namespace PatientManagement;
-
-public class PatientQuestionnaire
+class PatientQuestionnaire
 {
-    private ConnectionFactory _connectionFactory;
+    private ConnectionFactory _factory;
 
-    PatientQuestionnaire()
+    public PatientQuestionnaire()
     {
-        _connectionFactory = new ConnectionFactory();
+        _factory = new ConnectionFactory();
     }
-
+    
     public void Sender()
     {
-        _connectionFactory.Uri = new Uri("amqp://guest:guest@localhost:4420");
-        _connectionFactory.ClientProvidedName = "Patient Questionnaire Sender App";
+        _factory.Uri = new Uri("amqp://guest:guest@localhost:5672");
+        _factory.ClientProvidedName = "PatientQuestionnaire Sender App";
+        
+        using IConnection connection = _factory.CreateConnection();
+        using IModel channel = connection.CreateModel();
 
-        using var connection = _connectionFactory.CreateConnectionAsync();
-        //using var channel = connection.CreationOptions();
+        string exchangeName = "PatientQuestionnaireExchange";
+        string routingKey = "PatientQuestionnaire-route-key";
+        string queueName = "PatientQuestionnaireQueue";
+        
+        channel.ExchangeDeclare(exchangeName, ExchangeType.Direct);
+        channel.QueueDeclare(queueName, false, false, false, null);
+        channel.QueueBind(queueName, exchangeName, routingKey, null);
+
+        byte[] messageBodyBytes = Encoding.UTF8.GetBytes("test string");
+        channel.BasicPublish(exchangeName, routingKey, null, messageBodyBytes);
+        
+        channel.Close();
+        connection.Close();
     }
 }
