@@ -3,8 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -15,10 +13,10 @@ IConfiguration configManager = objBuilder.Build();
 var connection = configManager.GetConnectionString("medical-record-event-store");
 
 builder.Services.AddDbContext<MedicalRecordEventStoreContext>(options => options.UseNpgsql(connection));
+builder.Services.AddScoped<IEventHandler, StateEventHandler>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -49,6 +47,26 @@ app.MapGet("/medical-records/{uuid}", async (string uuid, MedicalRecordEventStor
         return Results.Ok(medicalRecord);
     })
     .WithName("GetMedicalRecordByUuid")
+    .WithOpenApi();
+
+app.MapPost("medical-records/{uuid}", async (string uuid, HttpRequest request, MedicalRecordEventStoreContext dbContext, IEventHandler statesEventHandler) =>
+    {
+        using var reader = new StreamReader(request.Body);
+        
+        var @event = new Event
+        {
+            Uuid = new Guid(uuid),
+            Body = await reader.ReadToEndAsync(),
+            Type = "MedicalRecordAppendage",
+            InsertedAt = DateTime.Now
+        };
+        await dbContext.Events.AddAsync(@event);
+        await dbContext.SaveChangesAsync();
+        
+        await statesEventHandler.Apply(@event);
+        return Results.Ok("Appended medical record successfully!");
+    })
+    .WithName("AppendMedicalRecord")
     .WithOpenApi();
 
 app.Run();
