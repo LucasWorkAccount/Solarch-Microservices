@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Medical_Record_System.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class initialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -27,24 +27,6 @@ namespace Medical_Record_System.Migrations
                 {
                     table.PrimaryKey("events_pkey", x => x.id);
                 });
-
-            migrationBuilder.CreateTable(
-                name: "medical_record",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    uuid = table.Column<Guid>(type: "uuid", nullable: false),
-                    name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    age = table.Column<int>(type: "integer", nullable: false),
-                    sex = table.Column<string>(type: "character varying(1)", maxLength: 1, nullable: false),
-                    bsn = table.Column<string>(type: "character varying(9)", maxLength: 9, nullable: false),
-                    record = table.Column<string>(type: "jsonb", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("medical_record_pk", x => x.id);
-                });
         }
 
         /// <inheritdoc />
@@ -52,9 +34,6 @@ namespace Medical_Record_System.Migrations
         {
             migrationBuilder.DropTable(
                 name: "events");
-
-            migrationBuilder.DropTable(
-                name: "medical_record");
         }
     }
 }

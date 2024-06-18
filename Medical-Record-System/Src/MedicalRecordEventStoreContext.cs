@@ -16,8 +16,6 @@ public partial class MedicalRecordEventStoreContext : DbContext
     }
 
     public virtual DbSet<Event> Events { get; set; }
-
-    public virtual DbSet<MedicalRecord> MedicalRecords { get; set; }
     
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseNpgsql(ConnectionString);
 
@@ -40,30 +38,7 @@ public partial class MedicalRecordEventStoreContext : DbContext
             entity.Property(e => e.Type).HasColumnName("type");
             entity.Property(e => e.Uuid).HasColumnName("uuid");
         });
-
-        modelBuilder.Entity<MedicalRecord>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("medical_record_pk");
-
-            entity.ToTable("medical_record");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Age).HasColumnName("age");
-            entity.Property(e => e.Bsn)
-                .HasMaxLength(9)
-                .HasColumnName("bsn");
-            entity.Property(e => e.Name)
-                .HasMaxLength(50)
-                .HasColumnName("name");
-            entity.Property(e => e.Record)
-                .HasColumnType("jsonb")
-                .HasColumnName("record");
-            entity.Property(e => e.Sex)
-                .HasMaxLength(1)
-                .HasColumnName("sex");
-            entity.Property(e => e.Uuid).HasColumnName("uuid");
-        });
-
+        
         OnModelCreatingPartial(modelBuilder);
     }
 

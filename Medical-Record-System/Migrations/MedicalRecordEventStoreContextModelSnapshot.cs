@@ -56,52 +56,6 @@ namespace Medical_Record_System.Migrations
 
                     b.ToTable("events", (string)null);
                 });
-
-            modelBuilder.Entity("Medical_Record_System.MedicalRecord", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Age")
-                        .HasColumnType("integer")
-                        .HasColumnName("age");
-
-                    b.Property<string>("Bsn")
-                        .IsRequired()
-                        .HasMaxLength(9)
-                        .HasColumnType("character varying(9)")
-                        .HasColumnName("bsn");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("name");
-
-                    b.Property<string>("Record")
-                        .IsRequired()
-                        .HasColumnType("jsonb")
-                        .HasColumnName("record");
-
-                    b.Property<string>("Sex")
-                        .IsRequired()
-                        .HasMaxLength(1)
-                        .HasColumnType("character varying(1)")
-                        .HasColumnName("sex");
-
-                    b.Property<Guid>("Uuid")
-                        .HasColumnType("uuid")
-                        .HasColumnName("uuid");
-
-                    b.HasKey("Id")
-                        .HasName("medical_record_pk");
-
-                    b.ToTable("medical_record", (string)null);
-                });
 #pragma warning restore 612, 618
         }
     }
