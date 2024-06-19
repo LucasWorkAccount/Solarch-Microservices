@@ -16,13 +16,36 @@
     ports:
       - "5420:5432"
     volumes:
-      - ~/apps/postgres:/var/lib/postgresql/data
+      - ~/apps/postgres/medical:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=1234
       - POSTGRES_USER=postgres
       - POSTGRES_DB=medical-record-event-store
     networks:
       - medical-record-system
+        
+  user-management:
+    image: user-management
+    ports:
+      - "8421:8080"
+    build:
+      context: .
+      dockerfile: User-Management/Dockerfile
+    networks:
+      - user-management
+  
+  user-management-db:
+    image: postgres:16-alpine
+    ports:
+      - "5421:5432"
+    volumes:
+      - ~/apps/postgres/user:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=user-management-db
+    networks:
+      - user-management
   
   patientmanagement:
     image: patientmanagement
@@ -45,5 +68,7 @@
 
 networks:
   medical-record-system:
+    driver: bridge
+  user-management:
     driver: bridge
  
