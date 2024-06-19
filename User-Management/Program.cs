@@ -29,6 +29,14 @@ app.MapGet("/users/{uuid}", async (string uuid, UserManagementDbContext userMana
         var user = await userManagementDbContext.Users.FirstOrDefaultAsync(user => user.Uuid == new Guid(uuid));
         return Results.Ok(user);
     })
+    .WithName("AddUser")
+    .WithOpenApi();
+
+app.MapPost("/users/", async (User user, UserManagementDbContext userManagementDbContext) =>
+    {
+        user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+        return Results.Ok(user.Password);
+    })
     .WithName("GetUserByUuid")
     .WithOpenApi();
 
