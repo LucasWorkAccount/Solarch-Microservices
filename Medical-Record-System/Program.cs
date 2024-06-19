@@ -53,7 +53,6 @@ app.MapPost("medical-records", async (HttpRequest request, IEventRepository even
         var json = JsonNode.Parse(await reader.ReadToEndAsync());
         var uuid = Guid.NewGuid();
         json!["uuid"] = uuid.ToString();
-        json!["record"] = "[]";
         
         var @event = new Event
         {

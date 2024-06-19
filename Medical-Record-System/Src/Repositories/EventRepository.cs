@@ -22,7 +22,7 @@ public class EventRepository : IEventRepository
     public async Task<IEnumerable<Event>> GetEventsByUuid(Guid uuid)
     {
         var events = new List<Event>();
-        foreach (var @event in await _medicalRecordEventStoreContext.Events.Where(@event => @event.Uuid == uuid).ToListAsync())
+        foreach (var @event in await _medicalRecordEventStoreContext.Events.Where(@event => @event.Uuid == uuid).OrderBy(@event => @event.Id).ToListAsync())
         {
             var json = JsonNode.Parse(@event.Body);
             switch (@event.Type)

@@ -7,7 +7,7 @@ public class MedicalRecordCreated : Event
     public int Age;
     public string Sex;
     public string Bsn;
-    public string Record;
+    public List<string> Record;
 
     public MedicalRecordCreated(Guid uuid, string name, int age, string sex, string bsn)
     {
@@ -16,6 +16,6 @@ public class MedicalRecordCreated : Event
         Age = age;
         Sex = sex;
         Bsn = bsn;
-        Record = "{\"entries\":[]}";
+        Record = [];
     }
 }
