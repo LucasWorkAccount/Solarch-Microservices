@@ -12,7 +12,6 @@ builder.Services.AddSingleton<PatientQuestionnaire>();
 var objBuilder = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true);
-//IConfiguration configManager = objBuilder.Build();
 
 var app = builder.Build();
 

@@ -15,7 +15,6 @@ public class PatientQuestionnaireReceiver
 
     public void Receiver()
     {
-        Console.WriteLine("In receiver!");
         _factory.Uri = new Uri("amqp://guest:guest@localhost:5672");
         _factory.ClientProvidedName = "PatientQuestionnaire Receiver App";
         
@@ -37,7 +36,6 @@ public class PatientQuestionnaireReceiver
             var body = args.Body.ToArray();
 
             string message = Encoding.UTF8.GetString(body);
-            Console.WriteLine($"Message Received: {message}");
 
             channel.BasicAck(args.DeliveryTag, false);
         };
