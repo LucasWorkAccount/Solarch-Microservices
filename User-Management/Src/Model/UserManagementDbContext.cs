@@ -19,7 +19,7 @@ public partial class UserManagementDbContext : DbContext
         _configuration = configuration;
     }
 
-    public virtual DbSet<User> Users { get; set; }
+    public virtual DbSet<User?> Users { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) 
         => optionsBuilder.UseNpgsql(_configuration.GetConnectionString("user-management-db-npgsql"));

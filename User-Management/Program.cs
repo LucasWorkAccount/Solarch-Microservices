@@ -13,6 +13,7 @@ IConfiguration configManager = objBuilder.Build();
 var connection = configManager.GetConnectionString("user-management-db");
 
 builder.Services.AddDbContext<UserManagementDbContext>(options => options.UseNpgsql(connection));
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 var app = builder.Build();
 
@@ -24,20 +25,58 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/users/{uuid}", async (string uuid, UserManagementDbContext userManagementDbContext) =>
+app.MapGet("/users/{uuid}",
+        async (string uuid, IUserRepository userRepository) =>
+        {
+            return Results.Ok(userRepository.FindUserByUuid(uuid));
+        })
+    .WithName("GetUserByUuid")
+    .WithOpenApi();
+
+app.MapPost("/register", async (RegisterUser user, IUserRepository userRepository) =>
     {
-        var user = await userManagementDbContext.Users.FirstOrDefaultAsync(user => user.Uuid == new Guid(uuid));
-        return Results.Ok(user);
+        try
+        {
+            if (await userRepository.UserExists(user.Email))
+            {
+                return Results.Conflict("Email already used");
+            }
+
+            user.Uuid = Guid.NewGuid();
+            Email.Validate(user.Email);
+            user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+
+            await userRepository.AddUser(user);
+            return Results.Json(new { token = JWTGenerator.Generate(user) });
+        }
+        catch
+        {
+            return Results.Conflict("Invalid data");
+        }
     })
     .WithName("AddUser")
     .WithOpenApi();
 
-app.MapPost("/users/", async (User user, UserManagementDbContext userManagementDbContext) =>
+app.MapPost("/login", async (RegisterUser user, IUserRepository userRepository) =>
     {
-        user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
-        return Results.Ok(user.Password);
+        try
+        {
+            var userDb = await userRepository.FindUserByEmail(user.Email);
+            if (userDb == null)
+            {
+                return Results.NotFound("Email/password incorrect");
+            }
+
+            var passwordCorrect = BCrypt.Net.BCrypt.Verify(user.Password, user.Password);
+            var jwt = new { token = JWTGenerator.Generate(user) };
+            return passwordCorrect ? Results.Json(jwt): Results.NotFound("Email/password incorrect");
+        }
+        catch
+        {
+            return Results.BadRequest("Bad request");
+        }
     })
-    .WithName("GetUserByUuid")
+    .WithName("Login")
     .WithOpenApi();
 
 app.Run();
