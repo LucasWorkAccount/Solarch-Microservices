@@ -25,11 +25,7 @@ public class MedicalRecordCollection : AggregateRoot<Guid>
     
     private void Handle(MedicalRecordAppendage @event)
     {
-        MedicalRecord medicalRecord = MedicalRecords.FirstOrDefault(medicalRecord => medicalRecord.Uuid == @event.Uuid)!;
-        var json = JsonNode.Parse(medicalRecord.Record);
-        var entries = json!["entries"]!.AsArray();
-        entries.Add(@event.Entry);
-        json["entries"] = entries;
-        medicalRecord.Record = json.ToJsonString();
+        var medicalRecord = MedicalRecords.FirstOrDefault(medicalRecord => medicalRecord.Uuid == @event.Uuid)!;
+        medicalRecord.Record.Add(@event.Entry);
     }
 }
