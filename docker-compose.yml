@@ -1,6 +1,7 @@
 ﻿services:
   medical-record-system:
     image: medical-record-system
+    container_name: medical-record-system
     ports:
       - "8420:8080"
     build:
@@ -13,6 +14,7 @@
 
   medical-record-event-store:
     image: postgres:16-alpine
+    container_name: medical-record-event-store
     ports:
       - "5420:5432"
     volumes:
@@ -26,6 +28,7 @@
         
   user-management:
     image: user-management
+    container_name: user-management
     ports:
       - "8421:8080"
     build:
@@ -36,6 +39,7 @@
   
   user-management-db:
     image: postgres:16-alpine
+    container_name: user-management-db
     ports:
       - "5421:5432"
     volumes:
@@ -49,6 +53,7 @@
   
   patientmanagement:
     image: patientmanagement
+    container_name: patientmanagement
     build:
       context: .
       dockerfile: PatientManagement/Dockerfile
