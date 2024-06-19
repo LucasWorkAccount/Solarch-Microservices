@@ -4,20 +4,22 @@ namespace Medical_Record_System;
 
 public partial class MedicalRecordEventStoreContext : DbContext
 {
-    private const string ConnectionString = "Host=medical-record-event-store;Port=5432;Database=medical-record-event-store;Username=postgres;Password=1234";
+    private readonly IConfiguration _configuration;
 
-    public MedicalRecordEventStoreContext()
+    public MedicalRecordEventStoreContext(IConfiguration configuration)
     {
+        _configuration = configuration;
     }
 
-    public MedicalRecordEventStoreContext(DbContextOptions<MedicalRecordEventStoreContext> options)
+    public MedicalRecordEventStoreContext(DbContextOptions<MedicalRecordEventStoreContext> options, IConfiguration configuration)
         : base(options)
     {
+        _configuration = configuration;
     }
 
     public virtual DbSet<Event> Events { get; set; }
     
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseNpgsql(ConnectionString);
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseNpgsql(_configuration.GetConnectionString("medical-record-event-store-npgsql"));
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
