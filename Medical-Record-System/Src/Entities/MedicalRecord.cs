@@ -7,9 +7,9 @@ public class MedicalRecord
     public int Age { get; set; }
     public string Sex { get; set; }
     public string Bsn { get; set; }
-    public string Record { get; set; }
+    public List<string> Record { get; set; }
 
-    public MedicalRecord(Guid uuid, string name, int age, string sex, string bsn, string record)
+    public MedicalRecord(Guid uuid, string name, int age, string sex, string bsn, List<string> record)
     {
         Uuid = uuid;
         Name = name;
