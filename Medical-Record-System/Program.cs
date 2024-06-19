@@ -1,7 +1,5 @@
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using Medical_Record_System;
-using Medical_Record_System.Entities;
 using Medical_Record_System.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +15,7 @@ IConfiguration configManager = objBuilder.Build();
 var connection = configManager.GetConnectionString("medical-record-event-store");
 
 builder.Services.AddDbContext<MedicalRecordEventStoreContext>(options => options.UseNpgsql(connection));
+builder.Services.AddScoped<IMedicalRecordRepository, MedicalRecordRepository>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 
 var app = builder.Build();
@@ -29,20 +28,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/medical-records/{uuid}", async (string uuid, IEventRepository eventRepository) =>
+app.MapGet("/medical-records/{uuid}", async (string uuid, IMedicalRecordRepository medicalRecordRepository) =>
     {
-        Guid guid;
-        try {
-            guid = new Guid(uuid);
-        }
-        catch (Exception)
-        {
-            throw new ArgumentException("Given uuid is not valid!");
-        }
-
-        var medicalRecordEvents = await eventRepository.GetEventsByUuid(guid);
-        var medicalRecord = new MedicalRecordCollection(guid, medicalRecordEvents).MedicalRecords[0];
-        return Results.Ok(medicalRecord);
+        return Results.Ok(await medicalRecordRepository.GetMedicalRecordByUuid(new Guid(uuid)));
     })
     .WithName("GetMedicalRecordByUuid")
     .WithOpenApi();
