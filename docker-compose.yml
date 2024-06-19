@@ -8,6 +8,8 @@
       dockerfile: Medical-Record-System/Dockerfile
     networks:
       - medical-record-system
+    depends_on:
+      - rabbitmq
 
   medical-record-event-store:
     image: postgres:16-alpine
@@ -21,7 +23,27 @@
       - POSTGRES_DB=medical-record-event-store
     networks:
       - medical-record-system
+  
+  patientmanagement:
+    image: patientmanagement
+    build:
+      context: .
+      dockerfile: PatientManagement/Dockerfile
+    networks:
+      - medical-record-system
+    depends_on:
+      - rabbitmq
+        
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  # RabbitMQ main port
+      - "15672:15672" # RabbitMQ management UI
+    networks:
+      - medical-record-system
 
 networks:
   medical-record-system:
     driver: bridge
+ 

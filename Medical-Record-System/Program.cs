@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using Medical_Record_System;
+using Medical_Record_System.RabbitMq;
 using Medical_Record_System.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,8 @@ var connection = configManager.GetConnectionString("medical-record-event-store")
 builder.Services.AddDbContext<MedicalRecordEventStoreContext>(options => options.UseNpgsql(connection));
 builder.Services.AddScoped<IMedicalRecordRepository, MedicalRecordRepository>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
+
+builder.Services.AddSingleton<PatientQuestionnaireReceiver>();
 
 var app = builder.Build();
 
@@ -76,5 +79,12 @@ app.MapPut("medical-records/{uuid}", async (string uuid, HttpRequest request, IE
     })
     .WithName("AppendMedicalRecord")
     .WithOpenApi();
+
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    var scope = app.Services.CreateScope();
+    var questionnaireReceiver = scope.ServiceProvider.GetRequiredService<PatientQuestionnaireReceiver>();
+    Task.Run(() => questionnaireReceiver.Receiver());
+});
 
 app.Run();
