@@ -2,11 +2,11 @@
 
 public interface IUserRepository
 {
-    public  Task<bool> UserExists(string uuid);
+    public  Task<bool> UserExists(string email);
 
-    public  Task<User?> FindUserByUuid(string email);
+    public  Task<User?> FindUserByUuid(string uuid);
 
-    public Task AddUser(RegisterUser user);
+    public Task AddUser(User user);
 
 
    public Task<User?> FindUserByEmail(string email);

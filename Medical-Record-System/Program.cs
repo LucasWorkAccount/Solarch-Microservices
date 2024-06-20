@@ -20,6 +20,7 @@ builder.Services.AddScoped<IMedicalRecordRepository, MedicalRecordRepository>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 
 builder.Services.AddSingleton<PatientQuestionnaireReceiver>();
+builder.Services.AddSingleton<IRabbitMqReceiverService, RabbitMqReceiverService>();
 
 var app = builder.Build();
 
@@ -85,6 +86,13 @@ app.Lifetime.ApplicationStarted.Register(() =>
     var scope = app.Services.CreateScope();
     var questionnaireReceiver = scope.ServiceProvider.GetRequiredService<PatientQuestionnaireReceiver>();
     Task.Run(() => questionnaireReceiver.Receiver());
+});
+
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    var scope = app.Services.CreateScope();
+    var userReceiver = scope.ServiceProvider.GetRequiredService<IRabbitMqReceiverService>();
+    Task.Run(() => userReceiver.Receive("Medical-record-system-register"));
 });
 
 app.Run();

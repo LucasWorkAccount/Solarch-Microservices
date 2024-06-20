@@ -4,12 +4,12 @@ namespace User_Management.Model;
 
 public class RegisterUser: User
 {
-   public string name { get; set; }
+   public string Name { get; set; }
 
-   public int age { get; set; }
+   public int Age { get; set; }
 
-   public string bsn { get; set; }
+   public string Bsn { get; set; }
 
-   public string sex { get; set; }
+   public string Sex { get; set; }
 
 }

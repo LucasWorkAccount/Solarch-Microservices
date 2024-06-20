@@ -35,7 +35,7 @@
       context: .
       dockerfile: User-Management/Dockerfile
     networks:
-      - user-management
+      - medical-record-system
   
   user-management-db:
     image: postgres:16-alpine
@@ -49,8 +49,8 @@
       - POSTGRES_USER=postgres
       - POSTGRES_DB=user-management-db
     networks:
-      - user-management
-  
+      - medical-record-system
+
   patientmanagement:
     image: patientmanagement
     container_name: patientmanagement
@@ -74,6 +74,3 @@
 networks:
   medical-record-system:
     driver: bridge
-  user-management:
-    driver: bridge
- 
