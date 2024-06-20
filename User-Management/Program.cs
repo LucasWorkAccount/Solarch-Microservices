@@ -1,3 +1,6 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using User_Management.Model;
 
@@ -14,6 +17,7 @@ var connection = configManager.GetConnectionString("user-management-db");
 
 builder.Services.AddDbContext<UserManagementDbContext>(options => options.UseNpgsql(connection));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddSingleton<IRabbitMqSenderService, RabbitMqSenderSenderService>();
 
 var app = builder.Build();
 
@@ -25,15 +29,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/users/{uuid}",
-        async (string uuid, IUserRepository userRepository) =>
-        {
-            return Results.Ok(userRepository.FindUserByUuid(uuid));
-        })
-    .WithName("GetUserByUuid")
-    .WithOpenApi();
-
-app.MapPost("/register", async (RegisterUser user, IUserRepository userRepository) =>
+app.MapPost("/register", async (RegisterUser user, IUserRepository userRepository, IRabbitMqSenderService rabbitMqService) =>
     {
         try
         {
@@ -47,17 +43,30 @@ app.MapPost("/register", async (RegisterUser user, IUserRepository userRepositor
             user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
 
             await userRepository.AddUser(user);
+            if (user.Role == "patient")
+            {
+                var MRSUser = new
+                {
+                    uuid = user.Uuid,
+                    name = user.Name,
+                    age = user.Age,
+                    sex = user.Sex,
+                    bsn = user.Bsn
+                };
+                rabbitMqService.Send("Medical-record-system-register", JsonSerializer.Serialize(MRSUser));
+            }
+
             return Results.Json(new { token = JWTGenerator.Generate(user) });
         }
-        catch
+        catch(Exception e)
         {
-            return Results.Conflict("Invalid data");
+            return Results.Conflict(e.Message);
         }
     })
     .WithName("AddUser")
     .WithOpenApi();
 
-app.MapPost("/login", async (RegisterUser user, IUserRepository userRepository) =>
+app.MapPost("/login", async (LoginUser user, IUserRepository userRepository) =>
     {
         try
         {
@@ -67,13 +76,13 @@ app.MapPost("/login", async (RegisterUser user, IUserRepository userRepository) 
                 return Results.NotFound("Email/password incorrect");
             }
 
-            var passwordCorrect = BCrypt.Net.BCrypt.Verify(user.Password, user.Password);
-            var jwt = new { token = JWTGenerator.Generate(user) };
-            return passwordCorrect ? Results.Json(jwt): Results.NotFound("Email/password incorrect");
+            var passwordCorrect = BCrypt.Net.BCrypt.Verify(user.Password, userDb.Password);
+            var jwt = new { token = JWTGenerator.Generate(userDb) };
+            return passwordCorrect ? Results.Json(jwt) : Results.NotFound("Email/password incorrect");
         }
-        catch
+        catch (Exception e)
         {
-            return Results.BadRequest("Bad request");
+            return Results.BadRequest(e.Message);
         }
     })
     .WithName("Login")
