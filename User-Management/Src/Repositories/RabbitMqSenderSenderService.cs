@@ -1,8 +1,8 @@
 ﻿using System.Text;
-
-namespace User_Management.Model;
-
 using RabbitMQ.Client;
+using User_Management.Model;
+
+namespace User_Management.Repositories;
 
 public class RabbitMqSenderSenderService: IRabbitMqSenderService
 {

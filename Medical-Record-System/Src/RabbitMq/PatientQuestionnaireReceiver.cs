@@ -42,7 +42,7 @@ public class PatientQuestionnaireReceiver
 
         string consumerTag = channel.BasicConsume(queueName, false, consumer);
 
-        Console.ReadLine();
+        // Console.ReadLine();
         channel.BasicCancel(consumerTag);
 
         channel.Close();

@@ -20,7 +20,7 @@ builder.Services.AddScoped<IMedicalRecordRepository, MedicalRecordRepository>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 
 builder.Services.AddSingleton<PatientQuestionnaireReceiver>();
-builder.Services.AddSingleton<IRabbitMqReceiverService, RabbitMqReceiverService>();
+builder.Services.AddSingleton<RabbitMqReceiverService>();
 
 var app = builder.Build();
 
@@ -81,18 +81,18 @@ app.MapPut("medical-records/{uuid}", async (string uuid, HttpRequest request, IE
     .WithName("AppendMedicalRecord")
     .WithOpenApi();
 
-app.Lifetime.ApplicationStarted.Register(() =>
-{
-    var scope = app.Services.CreateScope();
-    var questionnaireReceiver = scope.ServiceProvider.GetRequiredService<PatientQuestionnaireReceiver>();
-    Task.Run(() => questionnaireReceiver.Receiver());
-});
+// app.Lifetime.ApplicationStarted.Register(() =>
+// {
+//     var scope = app.Services.CreateScope();
+//     var questionnaireReceiver = scope.ServiceProvider.GetRequiredService<PatientQuestionnaireReceiver>();
+//     Task.Run(() => questionnaireReceiver.Receiver());
+// });
 
 app.Lifetime.ApplicationStarted.Register(() =>
 {
     var scope = app.Services.CreateScope();
-    var userReceiver = scope.ServiceProvider.GetRequiredService<IRabbitMqReceiverService>();
-    Task.Run(() => userReceiver.Receive("Medical-record-system-register"));
+    var userReceiver = scope.ServiceProvider.GetRequiredService<RabbitMqReceiverService>();
+    Task.Run(() => userReceiver.Receiver());
 });
 
 app.Run();

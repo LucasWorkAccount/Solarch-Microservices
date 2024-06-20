@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using User_Management.Model;
+using User_Management.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
