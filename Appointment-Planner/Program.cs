@@ -102,7 +102,7 @@ app.MapPost("/research-results", (ResearchResults researchResults, IGeneralPract
     .WithOpenApi();
 
 
-app.MapPut("/appointments/{referral}",
+app.MapPut("/appointments/reschedule/{referral}",
         async (string referral, HttpRequest request, IAppointmentRepository appointmentRepository) =>
         {
             using var reader = new StreamReader(request.Body);
@@ -113,6 +113,25 @@ app.MapPut("/appointments/{referral}",
         })
     .WithName("RescheduleAppointmentByReferral")
     .WithOpenApi();
+
+
+app.MapPut("/appointments/arrival/{referral}",
+        async (string referral, HttpRequest request, IAppointmentRepository appointmentRepository) =>
+        {
+            using var reader = new StreamReader(request.Body);
+            var json = JsonNode.Parse(await reader.ReadToEndAsync());
+            
+            if (!Enum.TryParse(json!["arrival"]!.ToString(), out Arrival arrival))
+            {
+                throw new ArgumentException("Invalid arrival status!");
+            }
+            
+            await appointmentRepository.SetArrival(new Guid(referral), arrival);
+            return Results.Ok("Appointment arrival registered successfully!");
+        })
+    .WithName("SetAppointmentArrivalByReferral")
+    .WithOpenApi();
+
 
 app.Run();
 
