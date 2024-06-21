@@ -7,11 +7,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PatientManagement", "PatientManagement\PatientManagement.csproj", "{97823889-82F8-4C37-A3FC-5A7ECF0A57C1}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "User-Management", "User-Management\User-Management.csproj", "{52818317-543A-45D8-ADA5-72A28CEA8A6E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Appointment-Planner", "Appointment-Planner\Appointment-Planner.csproj", "{2BF39C50-6AE5-4F38-80B1-9FAE236909BC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Notification-Sender", "Notification-Sender\Notification-Sender.csproj", "{88023D38-2691-49A8-8674-AD0BB9348CE2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,6 @@ Global
 		{2CC460A1-4D6F-40F0-BC4F-D78142692E78}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2CC460A1-4D6F-40F0-BC4F-D78142692E78}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2CC460A1-4D6F-40F0-BC4F-D78142692E78}.Release|Any CPU.Build.0 = Release|Any CPU
-		{97823889-82F8-4C37-A3FC-5A7ECF0A57C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{97823889-82F8-4C37-A3FC-5A7ECF0A57C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{97823889-82F8-4C37-A3FC-5A7ECF0A57C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{97823889-82F8-4C37-A3FC-5A7ECF0A57C1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{52818317-543A-45D8-ADA5-72A28CEA8A6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{52818317-543A-45D8-ADA5-72A28CEA8A6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52818317-543A-45D8-ADA5-72A28CEA8A6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -35,5 +31,9 @@ Global
 		{2BF39C50-6AE5-4F38-80B1-9FAE236909BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2BF39C50-6AE5-4F38-80B1-9FAE236909BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2BF39C50-6AE5-4F38-80B1-9FAE236909BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88023D38-2691-49A8-8674-AD0BB9348CE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88023D38-2691-49A8-8674-AD0BB9348CE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88023D38-2691-49A8-8674-AD0BB9348CE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88023D38-2691-49A8-8674-AD0BB9348CE2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -75,18 +75,18 @@
       - POSTGRES_DB=appointment-planner-db
     networks:
       - medical-record-system
-
-  patientmanagement:
-    image: patientmanagement
-    container_name: patientmanagement
+  
+  notification-sender:
+    image: notification-sender
+    container_name: notification-sender
+    ports:
+      - "8423:8080"
     build:
       context: .
-      dockerfile: PatientManagement/Dockerfile
+      dockerfile: Notification-Sender/Dockerfile
     networks:
       - medical-record-system
-    depends_on:
-      - rabbitmq
-        
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
