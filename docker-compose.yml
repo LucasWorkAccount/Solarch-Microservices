@@ -87,6 +87,17 @@
     networks:
       - medical-record-system
 
+  patient-transferral-system:
+    image: patient-transferral-system
+    container_name: patient-transferral-system
+    ports:
+      - "8424:8080"
+    build:
+      context: .
+      dockerfile: patient-transferral-system/Dockerfile
+    networks:
+      - medical-record-system
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
