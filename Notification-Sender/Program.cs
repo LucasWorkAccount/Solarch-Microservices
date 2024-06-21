@@ -1,7 +1,11 @@
+using Notification_Sender.RabbitMqReceivers;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddSingleton<GeneralPractitionerResultsReceiver>();
 
 var app = builder.Build();
 
@@ -19,5 +23,12 @@ app.MapGet("/", () =>
     })
     .WithName("SendNotification")
     .WithOpenApi();
+
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    var scope = app.Services.CreateScope();
+    var userReceiver = scope.ServiceProvider.GetRequiredService<GeneralPractitionerResultsReceiver>();
+    Task.Run(() => userReceiver.Receiver());
+});
 
 app.Run();
