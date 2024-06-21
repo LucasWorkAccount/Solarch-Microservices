@@ -31,12 +31,20 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/appointments/{patientUuid}",
-        async (string patientUuid, IAppointmentRepository appointmentRepository) =>
+app.MapGet("/appointments",
+        async (string? patientUuid, IAppointmentRepository appointmentRepository) =>
         {
-            return Results.Ok(await appointmentRepository.GetAppointmentsForPatient(new Guid(patientUuid)));
+            var appointments =
+                await appointmentRepository.GetAppointments(patientUuid == null ? null : new Guid(patientUuid));
+
+            return Results.Json(new
+            {
+                status = 200,
+                message = "Appointments retrieved successfully!",
+                appointments
+            });
         })
-    .WithName("GetAppointmentsByPatient")
+    .WithName("GetAppointments")
     .WithOpenApi();
 
 app.MapPost("/appointments",
@@ -45,10 +53,14 @@ app.MapPost("/appointments",
             var referral = Guid.NewGuid();
 
             await appointmentRepository.CreateAppointment(referral);
-            return Results.Ok("Appointment referral created successfully! Code: \"" + referral +
-                              "\" can be used to plan an appointment.");
+            return Results.Json(new
+            {
+                status = 200,
+                message = "Referral created successfully!",
+                referral
+            });
         })
-    .WithName("CreateAppointmentReferral")
+    .WithName("CreateAppointment")
     .WithOpenApi();
 
 
@@ -66,8 +78,13 @@ app.MapPost("/appointments/{referral}",
                 new Guid(referral)
             );
 
-            await appointmentRepository.PlanAppointment(appointment);
-            return Results.Ok("Appointment planned successfully!");
+            await appointmentRepository.EditAppointment(appointment);
+            return Results.Json(new
+            {
+                status = 200,
+                message = "Appointment planned successfully!",
+                appointment
+            });
         })
     .WithName("PlanAppointmentByReferral")
     .WithOpenApi();
@@ -78,27 +95,37 @@ app.MapPost("/appointments/followup/{referral}",
         {
             using var reader = new StreamReader(request.Body);
             var json = JsonNode.Parse(await reader.ReadToEndAsync());
-            
-            await appointmentRepository.PlanFollowupAppointment(new Guid(referral), DateTime.Parse(json!["datetime"]!.ToString()));
-            return Results.Ok("Followup appointment planned successfully!");
+            var appointment = await appointmentRepository.GetAppointment(new Guid(referral));
+
+            if (appointment == null)
+            {
+                return Results.Json(new
+                {
+                    status = 404,
+                    message = "Could not find an appointment with the given referral!",
+                    referral
+                });
+            }
+
+            var followupAppointment = new Appointment(
+                appointment.Patient,
+                appointment.Doctor,
+                DateTime.Parse(json!["datetime"]!.ToString()),
+                "NotYet",
+                Guid.NewGuid()
+            );
+
+            await appointmentRepository.CreateAppointment(followupAppointment.Referral);
+            await appointmentRepository.EditAppointment(followupAppointment);
+
+            return Results.Json(new
+            {
+                status = 200,
+                message = "Follow-up appointment planned successfully!",
+                followupAppointment
+            });
         })
     .WithName("PlanFollowupAppointmentByReferral")
-    .WithOpenApi();
-
-
-app.MapPost("/research-results", (ResearchResults researchResults, IGeneralPractitionerResultsSenderService sender) =>
-        {
-            try
-            {
-                sender.Send("General-practitioner-results", JsonSerializer.Serialize(researchResults));
-                return Results.Ok("Sent email to general practitioner!");
-            }
-            catch
-            {
-                return Results.BadRequest();
-            }
-        })
-    .WithName("SendResearchResults")
     .WithOpenApi();
 
 
@@ -107,9 +134,27 @@ app.MapPut("/appointments/reschedule/{referral}",
         {
             using var reader = new StreamReader(request.Body);
             var json = JsonNode.Parse(await reader.ReadToEndAsync());
-            
-            await appointmentRepository.RescheduleAppointment(new Guid(referral), DateTime.Parse(json!["datetime"]!.ToString()));
-            return Results.Ok("Appointment date and time moved successfully!");
+            var appointmentToEdit = await appointmentRepository.GetAppointment(new Guid(referral));
+
+            if (appointmentToEdit == null)
+            {
+                return Results.Json(new
+                {
+                    status = 404,
+                    message = "Could not find an appointment with the given referral!",
+                    referral
+                });
+            }
+
+            appointmentToEdit.Datetime = DateTime.Parse(json!["datetime"]!.ToString());
+            await appointmentRepository.EditAppointment(appointmentToEdit);
+
+            return Results.Json(new
+            {
+                status = 200,
+                message = "Appointment rescheduled successfully!",
+                appointmentToEdit
+            });
         })
     .WithName("RescheduleAppointmentByReferral")
     .WithOpenApi();
@@ -120,18 +165,64 @@ app.MapPut("/appointments/arrival/{referral}",
         {
             using var reader = new StreamReader(request.Body);
             var json = JsonNode.Parse(await reader.ReadToEndAsync());
+            var appointmentToEdit = await appointmentRepository.GetAppointment(new Guid(referral));
+            
+            if (appointmentToEdit == null)
+            {
+                return Results.Json(new
+                {
+                    status = 404,
+                    message = "Could not find an appointment with the given referral!",
+                    referral
+                });
+            }
             
             if (!Enum.TryParse(json!["arrival"]!.ToString(), out Arrival arrival))
             {
-                throw new ArgumentException("Invalid arrival status!");
+                return Results.Json(new
+                {
+                    status = 400,
+                    message = "Invalid arrival status! Expected one of the following:",
+                    validArrivalStatuses = Enum.GetNames(typeof(Arrival))
+                });
             }
             
-            await appointmentRepository.SetArrival(new Guid(referral), arrival);
-            return Results.Ok("Appointment arrival registered successfully!");
+            appointmentToEdit.Arrival = arrival.ToString();
+            await appointmentRepository.EditAppointment(appointmentToEdit);
+
+            return Results.Json(new
+            {
+                status = 200,
+                message = "Appointment arrival status updated successfully!",
+                appointmentToEdit
+            });
         })
     .WithName("SetAppointmentArrivalByReferral")
     .WithOpenApi();
 
 
-app.Run();
+app.MapPost("/research-results", (ResearchResults researchResults, IGeneralPractitionerResultsSenderService sender) =>
+    {
+        try
+        {
+            sender.Send("General-practitioner-results", JsonSerializer.Serialize(researchResults));
+            return Results.Json(new
+            {
+                status = 200,
+                message = "Email sent to general practitioner successfully!"
+            });
+        }
+        catch
+        {
+            return Results.Json(new
+            {
+                status = 400,
+                message = "Failed to send email to general practitioner!"
+            });
+        }
+    })
+    .WithName("SendResearchResults")
+    .WithOpenApi();
 
+
+app.Run();

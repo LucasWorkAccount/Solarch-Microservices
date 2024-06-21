@@ -5,16 +5,34 @@ namespace Appointment_Planner.Repositories;
 
 public class AppointmentRepository : IAppointmentRepository
 {
-    private readonly AppointmentPlannerDbContext _appointmentPlannerDbContext;
+    private readonly AppointmentPlannerDbContext _dbContext;
 
-    public AppointmentRepository(AppointmentPlannerDbContext appointmentPlannerDbContext)
+    public AppointmentRepository(AppointmentPlannerDbContext dbContext)
     {
-        _appointmentPlannerDbContext = appointmentPlannerDbContext;
+        _dbContext = dbContext;
+    }
+
+    public async Task<List<Appointment>> GetAppointments(Guid? patientUuid)
+    {
+        if (patientUuid == null)
+        {
+            return await _dbContext.Appointments.ToListAsync();
+        }
+
+        return await _dbContext.Appointments
+            .Where(a => a.Patient == patientUuid)
+            .OrderBy(a => a.Datetime)
+            .ToListAsync();
+    }
+
+    public async Task<Appointment?> GetAppointment(Guid referral)
+    {
+        return await _dbContext.Appointments.FirstOrDefaultAsync(a => a.Referral == referral);
     }
 
     public async Task<Guid> CreateAppointment(Guid referral)
     {
-        await _appointmentPlannerDbContext.Appointments.AddAsync(new Appointment(
+        await _dbContext.Appointments.AddAsync(new Appointment(
             Guid.Empty,
             Guid.Empty,
             DateTime.MinValue,
@@ -22,89 +40,26 @@ public class AppointmentRepository : IAppointmentRepository
             referral
         ));
 
-        await _appointmentPlannerDbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
         return referral;
     }
 
-    public async Task<Appointment> PlanAppointment(Appointment appointment)
+    public async Task<Appointment?> EditAppointment(Appointment appointment)
     {
-        var referredAppointment =
-            await _appointmentPlannerDbContext.Appointments.FirstOrDefaultAsync(a =>
-                a.Referral == appointment.Referral);
+        var appointmentToEdit =
+            await _dbContext.Appointments.FirstOrDefaultAsync(a => a.Referral == appointment.Referral);
 
-        if (referredAppointment == null)
+        if (appointmentToEdit == null)
         {
-            throw new Exception("Appointment referral not found!");
+            return null;
         }
 
-        referredAppointment.Patient = appointment.Patient;
-        referredAppointment.Doctor = appointment.Doctor;
-        referredAppointment.Datetime = appointment.Datetime;
-        referredAppointment.Arrival = appointment.Arrival;
-        await _appointmentPlannerDbContext.SaveChangesAsync();
+        appointmentToEdit.Patient = appointment.Patient;
+        appointmentToEdit.Doctor = appointment.Doctor;
+        appointmentToEdit.Datetime = appointment.Datetime;
+        appointmentToEdit.Arrival = appointment.Arrival;
 
-        return referredAppointment;
-    }
-
-    public async Task<Appointment> RescheduleAppointment(Guid referral, DateTime newDateTime)
-    {
-        var newAppointment =
-            await _appointmentPlannerDbContext.Appointments.FirstOrDefaultAsync(a => a.Referral == referral);
-
-        if (newAppointment == null)
-        {
-            throw new Exception("Appointment not found!");
-        }
-
-        newAppointment.Datetime = newDateTime;
-        await _appointmentPlannerDbContext.SaveChangesAsync();
-
-        return newAppointment;
-    }
-
-    public async Task<List<Appointment>> GetAppointmentsForPatient(Guid patientUuid)
-    {
-        return await _appointmentPlannerDbContext.Appointments
-            .Where(a => a.Patient == patientUuid)
-            .OrderBy(a => a.Datetime).ToListAsync();
-    }
-
-    public async Task<Appointment> PlanFollowupAppointment(Guid referral, DateTime dateTime)
-    {
-        var previousAppointment =
-            await _appointmentPlannerDbContext.Appointments.FirstOrDefaultAsync(a => a.Referral == referral);
-        
-        if (previousAppointment == null)
-        {
-            throw new Exception("Appointment not found!");
-        }
-        
-        var followupAppointment = new Appointment(
-            previousAppointment.Patient,
-            previousAppointment.Doctor,
-            dateTime,
-            "NotYet",
-            Guid.NewGuid()
-        );
-        
-        await _appointmentPlannerDbContext.Appointments.AddAsync(followupAppointment);
-        await _appointmentPlannerDbContext.SaveChangesAsync();
-        
-        return followupAppointment;
-    }
-    
-    public async Task<Appointment> SetArrival(Guid referral, Arrival arrival)
-    {
-        var appointment = await _appointmentPlannerDbContext.Appointments.FirstOrDefaultAsync(a => a.Referral == referral);
-        
-        if (appointment == null)
-        {
-            throw new Exception("Appointment not found!");
-        }
-        
-        appointment.Arrival = arrival.ToString();
-        await _appointmentPlannerDbContext.SaveChangesAsync();
-        
-        return appointment;
+        await _dbContext.SaveChangesAsync();
+        return appointmentToEdit;
     }
 }
