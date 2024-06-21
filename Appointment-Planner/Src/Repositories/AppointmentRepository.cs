@@ -92,4 +92,19 @@ public class AppointmentRepository : IAppointmentRepository
         
         return followupAppointment;
     }
+    
+    public async Task<Appointment> SetArrival(Guid referral, Arrival arrival)
+    {
+        var appointment = await _appointmentPlannerDbContext.Appointments.FirstOrDefaultAsync(a => a.Referral == referral);
+        
+        if (appointment == null)
+        {
+            throw new Exception("Appointment not found!");
+        }
+        
+        appointment.Arrival = arrival.ToString();
+        await _appointmentPlannerDbContext.SaveChangesAsync();
+        
+        return appointment;
+    }
 }
