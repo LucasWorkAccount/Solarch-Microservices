@@ -43,4 +43,19 @@ public class AppointmentRepository : IAppointmentRepository
         
         return referredAppointment;
     }
+
+    public async Task<Appointment> RescheduleAppointment(Guid referral, DateTime newDateTime)
+    {
+        var newAppointment = await _appointmentPlannerDbContext.Appointments.FirstOrDefaultAsync(a => a.Referral == referral);
+
+        if (newAppointment == null)
+        {
+            throw new Exception("Appointment not found!");
+        }
+
+        newAppointment.Datetime = newDateTime;
+        await _appointmentPlannerDbContext.SaveChangesAsync();
+        
+        return newAppointment;
+    }
 }
