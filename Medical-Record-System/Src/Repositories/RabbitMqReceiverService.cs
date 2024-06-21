@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -7,11 +8,12 @@ namespace Medical_Record_System.Repositories;
 
 public class RabbitMqReceiverService: IRabbitMqReceiverService
 {
-    private ConnectionFactory _factory;
 
-    public RabbitMqReceiverService()
+    private IEventRepository _eventRepository;
+
+    public RabbitMqReceiverService(IEventRepository eventRepository)
     {
-        _factory = new ConnectionFactory();
+        _eventRepository = eventRepository;
     }
 
     public void Receiver()
@@ -19,11 +21,14 @@ public class RabbitMqReceiverService: IRabbitMqReceiverService
 
         try
         {
-            Thread.Sleep(30000);
-            _factory.Uri = new Uri("amqp://guest:guest@rabbitmq:5672");
-            _factory.ClientProvidedName = "UserRegistration Sender App";
 
-            using IConnection connection = _factory.CreateConnection();
+            Thread.Sleep(30000);
+            var factory = new ConnectionFactory();
+            factory.Uri = new Uri("amqp://guest:guest@rabbitmq:5672");
+            factory.ClientProvidedName = "UserRegistration Sender App";
+
+            factory.NetworkRecoveryInterval = TimeSpan.FromSeconds(10);
+            using IConnection connection = factory.CreateConnection();
             using IModel channel = connection.CreateModel();
 
 
@@ -42,19 +47,27 @@ public class RabbitMqReceiverService: IRabbitMqReceiverService
             {
                 var body = args.Body.ToArray();
 
-                string message = Encoding.UTF8.GetString(body);
-                Console.WriteLine(message);
+                var message = Encoding.UTF8.GetString(body);
+                var json = JsonNode.Parse(message);
+                var uuid = Guid.NewGuid();
+                json!["uuid"] = uuid.ToString();
 
+                var @event = new Event
+                {
+                    Uuid = uuid,
+                    Body = json.ToJsonString(),
+                    Type = "MedicalRecordCreated",
+                    InsertedAt = DateTime.Now
+                };
+                _eventRepository.CreateEvent(@event);
                 channel.BasicAck(args.DeliveryTag, false);
             };
 
-            string consumerTag = channel.BasicConsume(queueName, false, consumer);
+            channel.BasicConsume(queueName, false, consumer);
 
-            // Console.ReadLine();
-            channel.BasicCancel(consumerTag);
-
-            channel.Close();
-            connection.Close();
+            Console.WriteLine("aa");
+            var waitHandle = new ManualResetEvent(false);
+            waitHandle.WaitOne();
         }
         catch(Exception e)
         {

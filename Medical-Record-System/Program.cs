@@ -16,6 +16,7 @@ IConfiguration configManager = objBuilder.Build();
 var connection = configManager.GetConnectionString("medical-record-event-store");
 
 builder.Services.AddDbContext<MedicalRecordEventStoreContext>(options => options.UseNpgsql(connection));
+
 builder.Services.AddScoped<IMedicalRecordRepository, MedicalRecordRepository>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 
@@ -32,10 +33,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/medical-records/{uuid}", async (string uuid, IMedicalRecordRepository medicalRecordRepository) =>
-    {
-        return Results.Ok(await medicalRecordRepository.GetMedicalRecordByUuid(new Guid(uuid)));
-    })
+app.MapGet("/medical-records/{uuid}",
+        async (string uuid, IMedicalRecordRepository medicalRecordRepository) =>
+        {
+            return Results.Ok(await medicalRecordRepository.GetMedicalRecordByUuid(new Guid(uuid)));
+        })
     .WithName("GetMedicalRecordByUuid")
     .WithOpenApi();
 
@@ -73,9 +75,9 @@ app.MapPut("medical-records/{uuid}", async (string uuid, HttpRequest request, IE
             Type = "MedicalRecordAppendage",
             InsertedAt = DateTime.Now
         };
-        
+
         await eventRepository.CreateEvent(@event);
-        
+
         return Results.Ok("Medical record successfully appended!");
     })
     .WithName("AppendMedicalRecord")

@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Medical_Record_System.Migrations
 {
     [DbContext(typeof(MedicalRecordEventStoreContext))]
-    [Migration("20240618120048_initialCreate")]
-    partial class initialCreate
+    [Migration("20240621092529_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
