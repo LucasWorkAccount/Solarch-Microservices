@@ -15,7 +15,9 @@ public class PatientQuestionnaireReceiver
 
     public void Receiver()
     {
-        _factory.Uri = new Uri("amqp://guest:guest@localhost:5672");
+        Console.WriteLine("Here");
+        Thread.Sleep(30000);
+        _factory.Uri = new Uri("amqp://guest:guest@rabbitmq:5672");
         _factory.ClientProvidedName = "PatientQuestionnaire Receiver App";
         
         using IConnection connection = _factory.CreateConnection();
@@ -30,21 +32,25 @@ public class PatientQuestionnaireReceiver
         channel.QueueBind(queueName, exchangeName, routingKey, null);
         channel.BasicQos(0, 1, false);
 
+        Console.WriteLine("Here1");
+        
         var consumer = new EventingBasicConsumer(channel);
         consumer.Received += (sender, args) =>
         {
             var body = args.Body.ToArray();
 
             string message = Encoding.UTF8.GetString(body);
-
+            Console.WriteLine(message);
+            
             channel.BasicAck(args.DeliveryTag, false);
         };
 
         string consumerTag = channel.BasicConsume(queueName, false, consumer);
 
-        Console.ReadLine();
+        var waitHandle = new ManualResetEvent(false);
+        waitHandle.WaitOne();
+        
         channel.BasicCancel(consumerTag);
-
         channel.Close();
         connection.Close();
     }
