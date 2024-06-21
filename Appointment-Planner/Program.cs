@@ -73,6 +73,19 @@ app.MapPost("/appointments/{referral}",
     .WithOpenApi();
 
 
+app.MapPost("/appointments/followup/{referral}",
+        async (string referral, HttpRequest request, IAppointmentRepository appointmentRepository) =>
+        {
+            using var reader = new StreamReader(request.Body);
+            var json = JsonNode.Parse(await reader.ReadToEndAsync());
+            
+            await appointmentRepository.PlanFollowupAppointment(new Guid(referral), DateTime.Parse(json!["datetime"]!.ToString()));
+            return Results.Ok("Followup appointment planned successfully!");
+        })
+    .WithName("PlanFollowupAppointmentByReferral")
+    .WithOpenApi();
+
+
 app.MapPost("/research-results", (ResearchResults researchResults, IGeneralPractitionerResultsSenderService sender) =>
         {
             try
