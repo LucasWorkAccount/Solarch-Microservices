@@ -35,7 +35,9 @@ public partial class AppointmentPlannerDbContext : DbContext
             entity.Property(e => e.Arrival)
                 .HasMaxLength(100)
                 .HasColumnName("arrival");
-            entity.Property(e => e.Datetime).HasColumnName("datetime");
+            entity.Property(e => e.Datetime)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("datetime");
             entity.Property(e => e.Doctor).HasColumnName("doctor");
             entity.Property(e => e.Patient).HasColumnName("patient");
             entity.Property(e => e.Referral).HasColumnName("referral");
