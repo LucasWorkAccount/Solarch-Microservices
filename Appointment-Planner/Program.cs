@@ -40,7 +40,7 @@ app.MapPost("/appointment",
     .WithOpenApi();
 
 
-app.MapPut("/appointment/{referral}",
+app.MapPost("/appointment/{referral}",
         async (string referral, HttpRequest request, IAppointmentRepository appointmentRepository) =>
         {
             using var reader = new StreamReader(request.Body);
@@ -59,6 +59,19 @@ app.MapPut("/appointment/{referral}",
             return Results.Ok("Appointment planned successfully!");
         })
     .WithName("PlanAppointment")
+    .WithOpenApi();
+
+app.MapPut("/appointment/{referral}",
+        async (string referral, HttpRequest request, IAppointmentRepository appointmentRepository) =>
+        {
+            using var reader = new StreamReader(request.Body);
+            var json = JsonNode.Parse(await reader.ReadToEndAsync());
+            DateTime utcDateTime = DateTime.SpecifyKind(DateTime.Parse(json!["datetime"]!.ToString()), DateTimeKind.Utc);
+
+            await appointmentRepository.RescheduleAppointment(new Guid(referral), utcDateTime);
+            return Results.Ok("Appointment date and time moved successfully!");
+        })
+    .WithName("Reschedule")
     .WithOpenApi();
 
 app.Run();
