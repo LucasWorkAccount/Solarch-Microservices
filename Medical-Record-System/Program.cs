@@ -92,7 +92,7 @@ app.Lifetime.ApplicationStarted.Register(() =>
 {
     var scope = app.Services.CreateScope();
     var userReceiver = scope.ServiceProvider.GetRequiredService<IRabbitMqReceiverService>();
-    Task.Run(() => userReceiver.Receive("Medical-record-system-register"));
+    Task.Run(() => userReceiver.Receiver());
 });
 
 app.Run();

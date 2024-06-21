@@ -3,5 +3,5 @@
 public interface IRabbitMqReceiverService
 {
 
-    public void Receive(string queueName);
+    public void Receiver();
 }
