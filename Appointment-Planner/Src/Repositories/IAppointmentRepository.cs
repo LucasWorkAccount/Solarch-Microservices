@@ -7,4 +7,5 @@ public interface IAppointmentRepository
     public Task<Guid> CreateAppointment(Guid referral);
     public Task<Appointment> PlanAppointment(Appointment appointment);
     public Task<Appointment> RescheduleAppointment(Guid patientUuid, DateTime newDateTime);
+    public Task<List<Appointment>> GetAppointmentsForPatient(Guid patientUuid);
 }
