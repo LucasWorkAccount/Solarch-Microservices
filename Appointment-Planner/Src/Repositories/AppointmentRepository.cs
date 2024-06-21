@@ -68,4 +68,28 @@ public class AppointmentRepository : IAppointmentRepository
             .Where(a => a.Patient == patientUuid)
             .OrderBy(a => a.Datetime).ToListAsync();
     }
+
+    public async Task<Appointment> PlanFollowupAppointment(Guid referral, DateTime dateTime)
+    {
+        var previousAppointment =
+            await _appointmentPlannerDbContext.Appointments.FirstOrDefaultAsync(a => a.Referral == referral);
+        
+        if (previousAppointment == null)
+        {
+            throw new Exception("Appointment not found!");
+        }
+        
+        var followupAppointment = new Appointment(
+            previousAppointment.Patient,
+            previousAppointment.Doctor,
+            dateTime,
+            "NotYet",
+            Guid.NewGuid()
+        );
+        
+        await _appointmentPlannerDbContext.Appointments.AddAsync(followupAppointment);
+        await _appointmentPlannerDbContext.SaveChangesAsync();
+        
+        return followupAppointment;
+    }
 }
