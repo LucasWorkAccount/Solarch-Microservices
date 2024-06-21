@@ -49,13 +49,11 @@ app.MapPost("/appointment/{referral}",
         {
             using var reader = new StreamReader(request.Body);
             var json = JsonNode.Parse(await reader.ReadToEndAsync());
-            DateTime utcDateTime =
-                DateTime.SpecifyKind(DateTime.Parse(json!["datetime"]!.ToString()), DateTimeKind.Utc);
 
             var appointment = new Appointment(
                 new Guid(json!["patient"]!.ToString()),
                 new Guid(json["doctor"]!.ToString()),
-                utcDateTime,
+                DateTime.Parse(json!["datetime"]!.ToString()),
                 json["arrival"]!.ToString(),
                 new Guid(referral)
             );
@@ -88,9 +86,8 @@ app.MapPut("/appointment/{referral}",
         {
             using var reader = new StreamReader(request.Body);
             var json = JsonNode.Parse(await reader.ReadToEndAsync());
-            DateTime utcDateTime = DateTime.SpecifyKind(DateTime.Parse(json!["datetime"]!.ToString()), DateTimeKind.Utc);
-
-            await appointmentRepository.RescheduleAppointment(new Guid(referral), utcDateTime);
+            
+            await appointmentRepository.RescheduleAppointment(new Guid(referral), DateTime.Parse(json!["datetime"]!.ToString()));
             return Results.Ok("Appointment date and time moved successfully!");
         })
     .WithName("Reschedule")
