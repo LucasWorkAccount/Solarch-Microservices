@@ -50,6 +50,31 @@
       - POSTGRES_DB=user-management-db
     networks:
       - medical-record-system
+  
+  appointment-planner:
+    image: appointment-planner
+    container_name: appointment-planner
+    ports:
+      - "8422:8080"
+    build:
+      context: .
+      dockerfile: Appointment-Planner/Dockerfile
+    networks:
+      - medical-record-system
+        
+  appointment-planner-db:
+    image: postgres:16-alpine
+    container_name: appointment-planner-db
+    ports:
+      - "5422:5432"
+    volumes:
+      - ~/apps/postgres/appointment:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=appointment-planner-db
+    networks:
+      - medical-record-system
 
   patientmanagement:
     image: patientmanagement
