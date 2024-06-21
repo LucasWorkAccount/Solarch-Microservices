@@ -25,7 +25,7 @@
       - POSTGRES_DB=medical-record-event-store
     networks:
       - medical-record-system
-        
+
   user-management:
     image: user-management
     container_name: user-management
@@ -51,17 +51,42 @@
     networks:
       - medical-record-system
 
-  patientmanagement:
-    image: patientmanagement
-    container_name: patientmanagement
+  appointment-planner:
+    image: appointment-planner
+    container_name: appointment-planner
+    ports:
+      - "8422:8080"
     build:
       context: .
-      dockerfile: PatientManagement/Dockerfile
+      dockerfile: Appointment-Planner/Dockerfile
     networks:
       - medical-record-system
-    depends_on:
-      - rabbitmq
-        
+
+  appointment-planner-db:
+    image: postgres:16-alpine
+    container_name: appointment-planner-db
+    ports:
+      - "5422:5432"
+    volumes:
+      - ~/apps/postgres/appointment:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=appointment-planner-db
+    networks:
+      - medical-record-system
+  
+  notification-sender:
+    image: notification-sender
+    container_name: notification-sender
+    ports:
+      - "8423:8080"
+    build:
+      context: .
+      dockerfile: Notification-Sender/Dockerfile
+    networks:
+      - medical-record-system
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
