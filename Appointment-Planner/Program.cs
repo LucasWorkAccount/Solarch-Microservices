@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Appointment_Planner;
 using Appointment_Planner.Entities;
@@ -18,6 +19,8 @@ var connection = configManager.GetConnectionString("appointment-planner-db");
 builder.Services.AddDbContext<AppointmentPlannerDbContext>(options => options.UseNpgsql(connection));
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 
+builder.Services.AddSingleton<IGeneralPractitionerResultsSenderService, GeneralPractitionerResultsSenderService>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -32,9 +35,10 @@ app.MapPost("/appointment",
         async (IAppointmentRepository appointmentRepository) =>
         {
             var referral = Guid.NewGuid();
-            
+
             await appointmentRepository.CreateAppointment(referral);
-            return Results.Ok("Appointment referral created successfully! Code: \"" + referral + "\" can be used to plan an appointment.");
+            return Results.Ok("Appointment referral created successfully! Code: \"" + referral +
+                              "\" can be used to plan an appointment.");
         })
     .WithName("CreateAppointmentReferral")
     .WithOpenApi();
@@ -45,7 +49,8 @@ app.MapPut("/appointment/{referral}",
         {
             using var reader = new StreamReader(request.Body);
             var json = JsonNode.Parse(await reader.ReadToEndAsync());
-            DateTime utcDateTime = DateTime.SpecifyKind(DateTime.Parse(json!["datetime"]!.ToString()), DateTimeKind.Utc);
+            DateTime utcDateTime =
+                DateTime.SpecifyKind(DateTime.Parse(json!["datetime"]!.ToString()), DateTimeKind.Utc);
 
             var appointment = new Appointment(
                 new Guid(json!["patient"]!.ToString()),
@@ -59,6 +64,21 @@ app.MapPut("/appointment/{referral}",
             return Results.Ok("Appointment planned successfully!");
         })
     .WithName("PlanAppointment")
+    .WithOpenApi();
+
+app.MapPost("/research-results", (ResearchResults researchResults, IGeneralPractitionerResultsSenderService sender) =>
+        {
+            try
+            {
+                sender.Send("General-practitioner-results", JsonSerializer.Serialize(researchResults));
+                return Results.Ok("Sent email to general practitioner!");
+            }
+            catch
+            {
+                return Results.BadRequest();
+            }
+        })
+    .WithName("SendResearchResults")
     .WithOpenApi();
 
 app.Run();

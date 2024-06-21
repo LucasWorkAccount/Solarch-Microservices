@@ -44,7 +44,7 @@ public class GeneralPractitionerResultsReceiver
                 var body = args.Body.ToArray();
 
                 var message = Encoding.UTF8.GetString(body);
-                Console.WriteLine($"Received Patient results: {message}");
+                Console.WriteLine($"Sending following results to general practitioner via email: {message}");
                 channel.BasicAck(args.DeliveryTag, false);
             };
 
