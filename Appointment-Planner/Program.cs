@@ -31,7 +31,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapPost("/appointment",
+app.MapGet("/appointments/{patientUuid}",
+        async (string patientUuid, IAppointmentRepository appointmentRepository) =>
+        {
+            return Results.Ok(await appointmentRepository.GetAppointmentsForPatient(new Guid(patientUuid)));
+        })
+    .WithName("GetAppointmentsByPatient")
+    .WithOpenApi();
+
+app.MapPost("/appointments",
         async (IAppointmentRepository appointmentRepository) =>
         {
             var referral = Guid.NewGuid();
@@ -44,7 +52,7 @@ app.MapPost("/appointment",
     .WithOpenApi();
 
 
-app.MapPost("/appointment/{referral}",
+app.MapPost("/appointments/{referral}",
         async (string referral, HttpRequest request, IAppointmentRepository appointmentRepository) =>
         {
             using var reader = new StreamReader(request.Body);
@@ -61,7 +69,7 @@ app.MapPost("/appointment/{referral}",
             await appointmentRepository.PlanAppointment(appointment);
             return Results.Ok("Appointment planned successfully!");
         })
-    .WithName("PlanAppointment")
+    .WithName("PlanAppointmentByReferral")
     .WithOpenApi();
 
 
@@ -81,7 +89,7 @@ app.MapPost("/research-results", (ResearchResults researchResults, IGeneralPract
     .WithOpenApi();
 
 
-app.MapPut("/appointment/{referral}",
+app.MapPut("/appointments/{referral}",
         async (string referral, HttpRequest request, IAppointmentRepository appointmentRepository) =>
         {
             using var reader = new StreamReader(request.Body);
@@ -90,7 +98,7 @@ app.MapPut("/appointment/{referral}",
             await appointmentRepository.RescheduleAppointment(new Guid(referral), DateTime.Parse(json!["datetime"]!.ToString()));
             return Results.Ok("Appointment date and time moved successfully!");
         })
-    .WithName("Reschedule")
+    .WithName("RescheduleAppointmentByReferral")
     .WithOpenApi();
 
 app.Run();
