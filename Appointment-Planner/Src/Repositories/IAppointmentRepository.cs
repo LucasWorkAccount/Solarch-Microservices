@@ -4,10 +4,8 @@ namespace Appointment_Planner.Repositories;
 
 public interface IAppointmentRepository
 {
+    public Task<Appointment?> GetAppointment(Guid referral);
+    public Task<List<Appointment>> GetAppointments(Guid? patientUuid);
     public Task<Guid> CreateAppointment(Guid referral);
-    public Task<Appointment> PlanAppointment(Appointment appointment);
-    public Task<Appointment> RescheduleAppointment(Guid patientUuid, DateTime newDateTime);
-    public Task<List<Appointment>> GetAppointmentsForPatient(Guid patientUuid);
-    public Task<Appointment> PlanFollowupAppointment(Guid referral, DateTime dateTime);
-    public Task<Appointment> SetArrival(Guid referral, Arrival arrival);
+    public Task<Appointment?> EditAppointment(Appointment appointment);
 }
