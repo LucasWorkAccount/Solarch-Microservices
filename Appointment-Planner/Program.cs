@@ -21,6 +21,15 @@ builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 
 builder.Services.AddSingleton<IGeneralPractitionerResultsSenderService, GeneralPractitionerResultsSenderService>();
 
+builder.Services.AddScoped<IAppointmentReminderSender, AppointmentReminderSender>();
+builder.Services.AddHostedService<CronJobService>(provider =>
+{
+    var sender = provider.GetRequiredService<IAppointmentReminderSender>();
+    // Set every minute for testing example, for daily reminders at 18:00 use "0 18 * * *"
+    const string cronExpression = "* * * * *";
+    return new CronJobService(cronExpression, sender);
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -166,7 +175,7 @@ app.MapPut("/appointments/arrival/{referral}",
             using var reader = new StreamReader(request.Body);
             var json = JsonNode.Parse(await reader.ReadToEndAsync());
             var appointmentToEdit = await appointmentRepository.GetAppointment(new Guid(referral));
-            
+
             if (appointmentToEdit == null)
             {
                 return Results.Json(new
@@ -176,7 +185,7 @@ app.MapPut("/appointments/arrival/{referral}",
                     referral
                 });
             }
-            
+
             if (!Enum.TryParse(json!["arrival"]!.ToString(), out Arrival arrival))
             {
                 return Results.Json(new
@@ -186,7 +195,7 @@ app.MapPut("/appointments/arrival/{referral}",
                     validArrivalStatuses = Enum.GetNames(typeof(Arrival))
                 });
             }
-            
+
             appointmentToEdit.Arrival = arrival.ToString();
             await appointmentRepository.EditAppointment(appointmentToEdit);
 

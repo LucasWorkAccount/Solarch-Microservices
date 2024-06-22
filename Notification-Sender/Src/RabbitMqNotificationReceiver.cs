@@ -5,14 +5,14 @@ using RabbitMQ.Client.Events;
 
 namespace Notification_Sender.RabbitMqReceivers;
 
-public class GeneralPractitionerResultsReceiver
+public class RabbitMqNotificationReceiver
 {
 
-    public GeneralPractitionerResultsReceiver()
+    public RabbitMqNotificationReceiver()
     {
     }
 
-    public void Receiver()
+    public void Receiver(string exchangeName, string routingKey, string queueName,string ClientProvidedName ,string logMessage )
     {
 
         try
@@ -21,17 +21,12 @@ public class GeneralPractitionerResultsReceiver
             Thread.Sleep(30000);
             var factory = new ConnectionFactory();
             factory.Uri = new Uri("amqp://guest:guest@rabbitmq:5672");
-            factory.ClientProvidedName = "General practitioner results receiver App";
+            factory.ClientProvidedName = ClientProvidedName;
 
             factory.NetworkRecoveryInterval = TimeSpan.FromSeconds(10);
             using IConnection connection = factory.CreateConnection();
             using IModel channel = connection.CreateModel();
 
-
-
-            string exchangeName = "General-practitioner-results-exchange";
-            string routingKey = "General-practitioner-results-route-key";
-            string queueName = "General-practitioner-results";
 
             channel.ExchangeDeclare(exchangeName, ExchangeType.Direct);
             channel.QueueDeclare(queueName, false, false, false, null);
@@ -44,7 +39,7 @@ public class GeneralPractitionerResultsReceiver
                 var body = args.Body.ToArray();
 
                 var message = Encoding.UTF8.GetString(body);
-                Console.WriteLine($"Sending following results to general practitioner via email: {message}");
+                Console.WriteLine(logMessage + message);
                 channel.BasicAck(args.DeliveryTag, false);
             };
 

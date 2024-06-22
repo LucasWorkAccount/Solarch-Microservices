@@ -8,4 +8,5 @@ public interface IAppointmentRepository
     public Task<List<Appointment>> GetAppointments(Guid? patientUuid);
     public Task<Guid> CreateAppointment(Guid referral);
     public Task<Appointment?> EditAppointment(Appointment appointment);
+    public List<Appointment> GetAppointmentsNextDay(DateTime currentDay);
 }
