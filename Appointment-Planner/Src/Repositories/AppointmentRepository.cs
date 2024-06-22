@@ -62,4 +62,10 @@ public class AppointmentRepository : IAppointmentRepository
         await _dbContext.SaveChangesAsync();
         return appointmentToEdit;
     }
+
+    public List<Appointment> GetAppointmentsNextDay(DateTime currentDay)
+    {
+        return _dbContext.Appointments.Where(a => a.Datetime.Day == currentDay.AddDays(1).Day)
+            .ToList();
+    }
 }

@@ -5,7 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddSingleton<GeneralPractitionerResultsReceiver>();
+builder.Services.AddSingleton<RabbitMqNotificationReceiver>();
 
 var app = builder.Build();
 
@@ -17,18 +17,34 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/", () =>
-    {
-        return Results.Ok("Notification sender is reachable!");
-    })
+app.MapGet("/", () => { return Results.Ok("Notification sender is reachable!"); })
     .WithName("SendNotification")
     .WithOpenApi();
 
 app.Lifetime.ApplicationStarted.Register(() =>
 {
     var scope = app.Services.CreateScope();
-    var userReceiver = scope.ServiceProvider.GetRequiredService<GeneralPractitionerResultsReceiver>();
-    Task.Run(() => userReceiver.Receiver());
+    var userReceiver = scope.ServiceProvider.GetRequiredService<RabbitMqNotificationReceiver>();
+    Task.Run(() => userReceiver.Receiver(
+        "General-practitioner-results-exchange",
+        "General-practitioner-results-route-key",
+        "General-practitioner-results",
+        "General practitioner results receiver App",
+        "Sending following results to general practitioner via email: ")
+    );
+});
+
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    var scope = app.Services.CreateScope();
+    var userReceiver = scope.ServiceProvider.GetRequiredService<RabbitMqNotificationReceiver>();
+    Task.Run(() => userReceiver.Receiver(
+        "Appointment-reminder-exchange",
+        "Appointment-reminder-route-key",
+        "Appointment-reminder",
+        "Appointment reminder sender App",
+        "Sending email reminder for appointment: ")
+    );
 });
 
 app.Run();
