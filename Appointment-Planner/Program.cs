@@ -17,7 +17,7 @@ var connection = configManager.GetConnectionString("appointment-planner-db");
 builder.Services.AddDbContext<AppointmentPlannerDbContext>(options => options.UseNpgsql(connection));
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 
-builder.Services.AddSingleton<IGeneralPractitionerResultsSenderService, GeneralPractitionerResultsSenderService>();
+builder.Services.AddSingleton<IRabbitMqSenderService, RabbitMqSenderService>();
 builder.Services.AddSingleton<IAppointmentReminderSender, AppointmentReminderSender>();
 
 builder.Services.AddHostedService<CronJobService>(provider =>

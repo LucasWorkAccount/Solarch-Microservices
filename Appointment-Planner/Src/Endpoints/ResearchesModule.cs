@@ -9,11 +9,18 @@ public static class ResearchesModule
     public static IEndpointRouteBuilder MapResearchEndpoints(this IEndpointRouteBuilder endpoints)
     {
         endpoints.MapPost("/research-results",
-                (ResearchResults researchResults, IGeneralPractitionerResultsSenderService sender) =>
+                (ResearchResults researchResults, IRabbitMqSenderService senderService) =>
                 {
                     try
                     {
-                        sender.Send("General-practitioner-results", JsonSerializer.Serialize(researchResults));
+                        senderService.Send(
+                            "General-practitioner-results",
+                            JsonSerializer.Serialize(researchResults),
+                            "General-practitioner-results-route-key",
+                            "General-practitioner-results-exchange",
+                            "General practitioner results receiver App"
+                        );
+
                         return Results.Json(new
                         {
                             status = 200,

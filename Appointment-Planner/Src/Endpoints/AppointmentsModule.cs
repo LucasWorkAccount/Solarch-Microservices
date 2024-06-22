@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Nodes;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 using Appointment_Planner.Entities;
 using Appointment_Planner.Repositories;
 
@@ -138,7 +139,8 @@ public static class AppointmentsModule
 
 
         endpoints.MapPut("/appointments/arrival/{referral}",
-                async (string referral, HttpRequest request, IAppointmentRepository appointmentRepository) =>
+                async (string referral, HttpRequest request, IAppointmentRepository appointmentRepository,
+                    IRabbitMqSenderService senderService) =>
                 {
                     using var reader = new StreamReader(request.Body);
                     var json = JsonNode.Parse(await reader.ReadToEndAsync());
@@ -154,7 +156,8 @@ public static class AppointmentsModule
                         });
                     }
 
-                    if (!Enum.TryParse(json!["arrival"]!.ToString(), out Arrival arrival))
+                    var validEnum = Enum.TryParse(json!["arrival"]!.ToString(), out Arrival arrival);
+                    if (!validEnum)
                     {
                         return Results.Json(new
                         {
@@ -162,6 +165,25 @@ public static class AppointmentsModule
                             message = "Invalid arrival status! Expected one of the following:",
                             validArrivalStatuses = Enum.GetNames(typeof(Arrival))
                         });
+                    }
+
+                    if (arrival != Arrival.NotYet && arrival != Arrival.NoShow)
+                    {
+                        var message = new
+                        {
+                            appointmentToEdit.Patient,
+                            appointmentToEdit.Doctor,
+                            referral = appointmentToEdit.Referral,
+                            arrival = appointmentToEdit.Arrival,
+                            appointmentTime = appointmentToEdit.Datetime.TimeOfDay.ToString()
+                        };
+                        senderService.Send(
+                            "Patient-arrival-notification",
+                            JsonSerializer.Serialize(message),
+                            "Patient-arrival-notification-route-key",
+                            "Patient-arrival-notification-exchange",
+                            "Patient arrival notification sender App"
+                        );
                     }
 
                     appointmentToEdit.Arrival = arrival.ToString();
