@@ -29,40 +29,41 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapPost("/register", async (RegisterUser user, IUserRepository userRepository, IRabbitMqSenderService rabbitMqService) =>
-    {
-        try
+app.MapPost("/register",
+        async (RegisterUser user, IUserRepository userRepository, IRabbitMqSenderService rabbitMqService) =>
         {
-            if (await userRepository.UserExists(user.Email))
+            try
             {
-                return Results.Conflict("Email already used");
-            }
-
-            user.Uuid = Guid.NewGuid();
-            Email.Validate(user.Email);
-            user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
-
-            await userRepository.AddUser(user);
-            if (user.Role == "patient")
-            {
-                var MRSUser = new
+                if (await userRepository.UserExists(user.Email))
                 {
-                    uuid = user.Uuid,
-                    name = user.Name,
-                    age = user.Age,
-                    sex = user.Sex,
-                    bsn = user.Bsn
-                };
-                rabbitMqService.Send("Medical-record-system-register", JsonSerializer.Serialize(MRSUser));
-            }
+                    return Results.Conflict("Email already used");
+                }
 
-            return Results.Json(new { token = JWTGenerator.Generate(user) });
-        }
-        catch(Exception e)
-        {
-            return Results.Conflict(e.Message);
-        }
-    })
+                user.Uuid = Guid.NewGuid();
+                Email.Validate(user.Email);
+                user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+
+                await userRepository.AddUser(user);
+                if (user.Role == "patient")
+                {
+                    var MRSUser = new
+                    {
+                        uuid = user.Uuid,
+                        name = user.Name,
+                        age = user.Age,
+                        sex = user.Sex,
+                        bsn = user.Bsn
+                    };
+                    rabbitMqService.Send("Medical-record-system-register", JsonSerializer.Serialize(MRSUser));
+                }
+
+                return Results.Json(new { token = JWTGenerator.Generate(user) });
+            }
+            catch (Exception e)
+            {
+                return Results.Conflict(e.Message);
+            }
+        })
     .WithName("AddUser")
     .WithOpenApi();
 
@@ -87,5 +88,30 @@ app.MapPost("/login", async (LoginUser user, IUserRepository userRepository) =>
     })
     .WithName("Login")
     .WithOpenApi();
+
+
+app.MapPut("/identify", async (IdUser user, IUserRepository userRepository) =>
+    {
+        try
+        {
+            var userId = await userRepository.FindUserByEmail(user.Email);
+            userId.IsIdentified = true;
+            await userRepository.EditUser(userId);
+
+            return Results.Json(new
+            {
+                status = 200,
+                message = "Patient successfully identified",
+
+            });
+        }
+        catch (Exception e)
+        {
+            return Results.BadRequest(e.Message);
+        }
+    })
+    .WithName("identify")
+    .WithOpenApi();
+
 
 app.Run();

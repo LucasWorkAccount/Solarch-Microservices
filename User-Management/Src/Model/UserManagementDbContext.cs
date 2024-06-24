@@ -43,6 +43,7 @@ public partial class UserManagementDbContext : DbContext
                 .HasMaxLength(100)
                 .HasColumnName("role");
             entity.Property(e => e.Uuid).HasColumnName("uuid");
+            entity.Property(e => e.IsIdentified).HasDefaultValue(false);
         });
 
         OnModelCreatingPartial(modelBuilder);

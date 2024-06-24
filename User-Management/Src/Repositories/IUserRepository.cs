@@ -10,4 +10,6 @@ public interface IUserRepository
 
 
    public Task<User?> FindUserByEmail(string email);
+
+   public Task EditUser(User user);
 }
