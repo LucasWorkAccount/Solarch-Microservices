@@ -8,7 +8,7 @@ public static class ResearchesModule
 {
     public static IEndpointRouteBuilder MapResearchEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapPost("/research-results",
+        endpoints.MapPost("/research-results-to-practitioner",
                 (ResearchResults researchResults, IRabbitMqSenderService senderService) =>
                 {
                     try
@@ -18,7 +18,7 @@ public static class ResearchesModule
                             JsonSerializer.Serialize(researchResults),
                             "General-practitioner-results-route-key",
                             "General-practitioner-results-exchange",
-                            "General practitioner results receiver App"
+                            "General practitioner results sender App"
                         );
 
                         return Results.Json(new
@@ -36,8 +36,41 @@ public static class ResearchesModule
                         });
                     }
                 })
-            .WithName("SendResearchResults")
+            .WithName("SendResearchResultsToGeneralPractitioner")
             .WithOpenApi();
+
+
+        endpoints.MapPost("/request-research",
+                (ResearchRequest researchRequest, IRabbitMqSenderService senderService) =>
+                {
+                    try
+                    {
+                        senderService.Send(
+                            "request-research",
+                            JsonSerializer.Serialize(researchRequest),
+                            "request-research-route-key",
+                            "request-research-exchange",
+                            "Request research sender App"
+                        );
+
+                        return Results.Json(new
+                        {
+                            status = 200,
+                            message = "Email with research request sent to research laboratory"
+                        });
+                    }
+                    catch
+                    {
+                        return Results.Json(new
+                        {
+                            status = 400,
+                            message = "Failed to send research"
+                        });
+                    }
+                })
+            .WithName("RequestResearch")
+            .WithOpenApi();
+
 
         return endpoints;
     }
