@@ -24,23 +24,20 @@ app.MapGet("/", () =>
     .WithName("SendNotification")
     .WithOpenApi();
 
-app.MapPost("/questionnaire", (Questionnaire questionnaire, IQuestionnaireSender questionnaireSender) =>
+app.MapPost("/questionnaire/{uuid}", (string uuid, Questionnaire questionnaire, IQuestionnaireSender questionnaireSender) =>
 {
     try
     {
+        Console.WriteLine("Going to send!");
+        questionnaire.uuid = new Guid(uuid);
         questionnaireSender.Send("PatientQuestionnaireQueue", questionnaire);
     }
     catch (Exception exception)
     {
         Console.WriteLine(exception.Message);
     }
-});
 
-// using (var scope = app.Services.CreateScope())
-// {
-//     var services = scope.ServiceProvider;
-//     var patientQuestionnaire = services.GetRequiredService<PatientQuestionnaire>();
-//     patientQuestionnaire.Send();
-// }
+    return Results.Ok("questionnaire send successfully");
+});
 
 app.Run();

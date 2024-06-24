@@ -18,6 +18,7 @@ public partial class MedicalRecordEventStoreContext : DbContext
     }
 
     public virtual DbSet<Event> Events { get; set; }
+    public virtual DbSet<Questionnaire> Questionnaires { get; set; }
     
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseNpgsql(_configuration.GetConnectionString("medical-record-event-store-npgsql"));
 

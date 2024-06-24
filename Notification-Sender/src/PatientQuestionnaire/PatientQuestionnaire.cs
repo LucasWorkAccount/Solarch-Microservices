@@ -18,7 +18,6 @@ class PatientQuestionnaire : IQuestionnaireSender
     public void Send(string queueName, Questionnaire questionnaire)
     {
         Thread.Sleep(30000);
-        
         using IConnection connection = _factory.CreateConnection();
         using IModel channel = connection.CreateModel();
 
@@ -30,7 +29,6 @@ class PatientQuestionnaire : IQuestionnaireSender
         channel.QueueBind(queueName, exchangeName, routingKey, null);
         
         var jason = JsonSerializer.Serialize(questionnaire);
-        Console.WriteLine(jason);
         
         byte[] messageBodyBytes = Encoding.UTF8.GetBytes(jason);
         
