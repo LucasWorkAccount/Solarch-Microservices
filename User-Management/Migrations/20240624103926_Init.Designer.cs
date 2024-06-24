@@ -12,8 +12,8 @@ using User_Management.Model;
 namespace User_Management.Migrations
 {
     [DbContext(typeof(UserManagementDbContext))]
-    [Migration("20240619141737_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20240624103926_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,21 +35,29 @@ namespace User_Management.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("email");
 
+                    b.Property<bool>("IsIdentified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Password")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("password");
 
                     b.Property<string>("Role")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("role");
 
-                    b.Property<Guid?>("Uuid")
+                    b.Property<Guid>("Uuid")
                         .HasColumnType("uuid")
                         .HasColumnName("uuid");
 
