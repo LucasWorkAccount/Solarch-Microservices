@@ -77,4 +77,19 @@ app.Lifetime.ApplicationStarted.Register(() =>
     );
 });
 
+
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    var scope = app.Services.CreateScope();
+    var userReceiver = scope.ServiceProvider.GetRequiredService<RabbitMqNotificationReceiver>();
+    Task.Run(() => userReceiver.Receiver(
+            "request-research-exchange",
+            "request-research-route-key",
+            "request-research",
+            "Request research Receiver App",
+            "Sending email with research request to laboratory: "
+        )
+    );
+});
+
 app.Run();
