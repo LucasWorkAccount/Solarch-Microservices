@@ -126,4 +126,18 @@ app.Lifetime.ApplicationStarted.Register(() =>
     );
 });
 
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    var scope = app.Services.CreateScope();
+    var userReceiver = scope.ServiceProvider.GetRequiredService<RabbitMqNotificationReceiver>();
+    Task.Run(() => userReceiver.Receiver(
+            "billable-action-exchange",
+            "billable-action-route-key",
+            "billable-action",
+            "Billable action Receiver App",
+            "Sending billable action to healthcare provider: "
+        )
+    );
+});
+
 app.Run();
