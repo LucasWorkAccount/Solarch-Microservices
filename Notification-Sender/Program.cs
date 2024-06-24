@@ -23,21 +23,22 @@ app.MapGet("/", () => { return Results.Ok("Notification sender is reachable!"); 
     .WithName("SendNotification")
     .WithOpenApi();
 
-app.MapPost("/questionnaire/{uuid}", (string uuid, Questionnaire questionnaire, IQuestionnaireSender questionnaireSender) =>
-{
-    try
+app.MapPost("/questionnaire/{uuid}",
+    (string uuid, Questionnaire questionnaire, IQuestionnaireSender questionnaireSender) =>
     {
-        Console.WriteLine("Going to send!");
-        questionnaire.uuid = new Guid(uuid);
-        questionnaireSender.Send("PatientQuestionnaireQueue", questionnaire);
-    }
-    catch (Exception exception)
-    {
-        Console.WriteLine(exception.Message);
-    }
+        try
+        {
+            Console.WriteLine("Going to send!");
+            questionnaire.uuid = new Guid(uuid);
+            questionnaireSender.Send("PatientQuestionnaireQueue", questionnaire);
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine(exception.Message);
+        }
 
-    return Results.Ok("questionnaire send successfully");
-});
+        return Results.Ok("questionnaire send successfully");
+    });
 
 app.Lifetime.ApplicationStarted.Register(() =>
 {
@@ -106,6 +107,21 @@ app.Lifetime.ApplicationStarted.Register(() =>
             "request-research",
             "Request research Receiver App",
             "Sending email with research request to laboratory: "
+        )
+    );
+});
+
+
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    var scope = app.Services.CreateScope();
+    var userReceiver = scope.ServiceProvider.GetRequiredService<RabbitMqNotificationReceiver>();
+    Task.Run(() => userReceiver.Receiver(
+            "send-recipe-exchange",
+            "send-recipe-route-key",
+            "send-recipe",
+            "Recipe sender App",
+            "Sending email with following recipe to Pharmacy: "
         )
     );
 });

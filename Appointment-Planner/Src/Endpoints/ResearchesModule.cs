@@ -71,6 +71,37 @@ public static class ResearchesModule
             .WithName("RequestResearch")
             .WithOpenApi();
 
+        endpoints.MapPost("/send-recipe",
+                (RecipeRequest recipeRequest, IRabbitMqSenderService senderService) =>
+                {
+                    try
+                    {
+                        senderService.Send(
+                            "send-recipe",
+                            JsonSerializer.Serialize(recipeRequest),
+                            "send-recipe-route-key",
+                            "send-recipe-exchange",
+                            "recipe sender App"
+                        );
+
+                        return Results.Json(new
+                        {
+                            status = 200,
+                            message = "Email with Recipe sent to pharmacy"
+                        });
+                    }
+                    catch
+                    {
+                        return Results.Json(new
+                        {
+                            status = 400,
+                            message = "Failed to send recipe"
+                        });
+                    }
+                })
+            .WithName("SendRecipe")
+            .WithOpenApi();
+
 
         return endpoints;
     }
