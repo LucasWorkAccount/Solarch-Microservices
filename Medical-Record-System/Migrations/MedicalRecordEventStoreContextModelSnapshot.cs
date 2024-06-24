@@ -56,7 +56,6 @@ namespace Medical_Record_System.Migrations
 
                     b.ToTable("events", (string)null);
                 });
-
 #pragma warning restore 612, 618
         }
     }

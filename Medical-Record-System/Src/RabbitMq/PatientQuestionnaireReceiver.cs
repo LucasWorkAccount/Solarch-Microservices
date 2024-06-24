@@ -56,7 +56,6 @@ public class PatientQuestionnaireReceiver
                     Type = "MedicalRecordAppendage",
                     InsertedAt = DateTime.Now
                 };
-                Console.WriteLine(@event.Uuid + " " + @event.Body + " " + @event.Type + " " + @event.InsertedAt);
                 await _repository.CreateEvent(@event);
             }
             
