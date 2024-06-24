@@ -3,19 +3,16 @@ using System.Text.Json.Nodes;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace Medical_Record_System.Repositories;
+namespace Notification_Sender.RabbitMqReceivers;
 
-public class RabbitMqReceiverService: IRabbitMqReceiverService
+public class RabbitMqNotificationReceiver
 {
 
-    private IEventRepository _eventRepository;
-
-    public RabbitMqReceiverService(IEventRepository eventRepository)
+    public RabbitMqNotificationReceiver()
     {
-        _eventRepository = eventRepository;
     }
 
-    public void Receiver()
+    public void Receiver(string exchangeName, string routingKey, string queueName,string ClientProvidedName ,string logMessage )
     {
 
         try
@@ -24,17 +21,12 @@ public class RabbitMqReceiverService: IRabbitMqReceiverService
             Thread.Sleep(30000);
             var factory = new ConnectionFactory();
             factory.Uri = new Uri("amqp://guest:guest@rabbitmq:5672");
-            factory.ClientProvidedName = "UserRegistration Sender App";
+            factory.ClientProvidedName = ClientProvidedName;
 
             factory.NetworkRecoveryInterval = TimeSpan.FromSeconds(10);
             using IConnection connection = factory.CreateConnection();
             using IModel channel = connection.CreateModel();
 
-
-
-            string exchangeName = "User-registration-exchange";
-            string routingKey = "User-registration-route-key";
-            string queueName = "Medical-record-system-register";
 
             channel.ExchangeDeclare(exchangeName, ExchangeType.Direct);
             channel.QueueDeclare(queueName, false, false, false, null);
@@ -47,18 +39,7 @@ public class RabbitMqReceiverService: IRabbitMqReceiverService
                 var body = args.Body.ToArray();
 
                 var message = Encoding.UTF8.GetString(body);
-                var json = JsonNode.Parse(message);
-                var uuid = Guid.NewGuid();
-                json!["uuid"] = uuid.ToString();
-
-                var @event = new Event
-                {
-                    Uuid = uuid,
-                    Body = json.ToJsonString(),
-                    Type = "MedicalRecordCreated",
-                    InsertedAt = DateTime.Now
-                };
-                _eventRepository.CreateEvent(@event);
+                Console.WriteLine(logMessage + message);
                 channel.BasicAck(args.DeliveryTag, false);
             };
 

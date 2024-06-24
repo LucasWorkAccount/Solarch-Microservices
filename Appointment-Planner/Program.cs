@@ -1,3 +1,8 @@
+using Appointment_Planner;
+using Appointment_Planner.Endpoints;
+using Appointment_Planner.Repositories;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
@@ -9,6 +14,20 @@ var objBuilder = new ConfigurationBuilder()
 IConfiguration configManager = objBuilder.Build();
 var connection = configManager.GetConnectionString("appointment-planner-db");
 
+builder.Services.AddDbContext<AppointmentPlannerDbContext>(options => options.UseNpgsql(connection));
+builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+
+builder.Services.AddSingleton<IRabbitMqSenderService, RabbitMqSenderService>();
+builder.Services.AddSingleton<IAppointmentReminderSender, AppointmentReminderSender>();
+
+builder.Services.AddHostedService<CronJobService>(provider =>
+{
+    var sender = provider.GetRequiredService<IAppointmentReminderSender>();
+    // Set every minute for testing example, for daily reminders at 18:00 use "0 18 * * *"
+    const string cronExpression = "* * * * *";
+    return new CronJobService(cronExpression, sender);
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -16,14 +35,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
 app.UseHttpsRedirection();
 
-app.MapGet("/", () =>
-    {
-        return Results.Ok("Appointment planner is reachable!");
-    })
-    .WithName("GetAppointmentByUuid")
-    .WithOpenApi();
+app.MapResearchEndpoints();
+app.MapAppointmentEndpoints();
 
 app.Run();
