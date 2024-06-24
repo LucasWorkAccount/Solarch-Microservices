@@ -53,6 +53,14 @@ public static class ResearchesModule
                             "Request research sender App"
                         );
 
+                        senderService.Send(
+                            "billable-action",
+                            JsonSerializer.Serialize(researchRequest),
+                            "billable-action-route-key",
+                            "billable-action-exchange",
+                            "billable action sender App"
+                        );
+
                         return Results.Json(new
                         {
                             status = 200,
@@ -82,6 +90,14 @@ public static class ResearchesModule
                             "send-recipe-route-key",
                             "send-recipe-exchange",
                             "recipe sender App"
+                        );
+
+                        senderService.Send(
+                            "billable-action",
+                            JsonSerializer.Serialize(recipeRequest),
+                            "billable-action-route-key",
+                            "billable-action-exchange",
+                            "billable action sender App"
                         );
 
                         return Results.Json(new
