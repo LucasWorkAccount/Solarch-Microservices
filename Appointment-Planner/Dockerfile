@@ -5,7 +5,7 @@ EXPOSE 8080
 EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-ARG BUILD_CONFIGURATION=Release
+ARG BUILD_CONFIGURATION=Development
 WORKDIR /src
 COPY ["Appointment-Planner/Appointment-Planner.csproj", "Appointment-Planner/"]
 RUN dotnet restore "Appointment-Planner/Appointment-Planner.csproj"
@@ -14,7 +14,7 @@ WORKDIR "/src/Appointment-Planner"
 RUN dotnet build "Appointment-Planner.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
+ARG BUILD_CONFIGURATION=Development
 RUN dotnet publish "Appointment-Planner.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final

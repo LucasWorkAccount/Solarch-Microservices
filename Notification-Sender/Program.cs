@@ -63,4 +63,18 @@ app.Lifetime.ApplicationStarted.Register(() =>
     );
 });
 
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    var scope = app.Services.CreateScope();
+    var userReceiver = scope.ServiceProvider.GetRequiredService<RabbitMqNotificationReceiver>();
+    Task.Run(() => userReceiver.Receiver(
+            "Patient-referral-notification-exchange",
+            "Patient-referral-notification-route-key",
+            "Patient-referral-notification",
+            "Patient referral notification Receiver App",
+            "Sending email with referral to patient: "
+        )
+    );
+});
+
 app.Run();
