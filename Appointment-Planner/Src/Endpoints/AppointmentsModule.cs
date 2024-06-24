@@ -26,9 +26,23 @@ public static class AppointmentsModule
             .WithOpenApi();
 
         endpoints.MapPost("/appointments",
-                async (IAppointmentRepository appointmentRepository) =>
+                async (AppointmentEmail email, IAppointmentRepository appointmentRepository,
+                    IRabbitMqSenderService senderService) =>
                 {
                     var referral = Guid.NewGuid();
+                    var message = new
+                    {
+                        referral,
+                        email.Email
+                    };
+
+                    senderService.Send(
+                        "Patient-referral-notification",
+                        JsonSerializer.Serialize(message),
+                        "Patient-referral-notification-route-key",
+                        "Patient-referral-notification-exchange",
+                        "Patient referral notification sender App"
+                    );
 
                     await appointmentRepository.CreateAppointment(referral);
                     return Results.Json(new
