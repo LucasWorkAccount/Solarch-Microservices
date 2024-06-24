@@ -1,3 +1,4 @@
+using PatientManagement;
 using Notification_Sender.RabbitMqReceivers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddSingleton<IQuestionnaireSender, PatientQuestionnaire>();
 builder.Services.AddSingleton<RabbitMqNotificationReceiver>();
 
 var app = builder.Build();
@@ -20,6 +22,22 @@ app.UseHttpsRedirection();
 app.MapGet("/", () => { return Results.Ok("Notification sender is reachable!"); })
     .WithName("SendNotification")
     .WithOpenApi();
+
+app.MapPost("/questionnaire/{uuid}", (string uuid, Questionnaire questionnaire, IQuestionnaireSender questionnaireSender) =>
+{
+    try
+    {
+        Console.WriteLine("Going to send!");
+        questionnaire.uuid = new Guid(uuid);
+        questionnaireSender.Send("PatientQuestionnaireQueue", questionnaire);
+    }
+    catch (Exception exception)
+    {
+        Console.WriteLine(exception.Message);
+    }
+
+    return Results.Ok("questionnaire send successfully");
+});
 
 app.Lifetime.ApplicationStarted.Register(() =>
 {
