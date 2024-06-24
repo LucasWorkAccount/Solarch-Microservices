@@ -18,7 +18,6 @@ var connection = configManager.GetConnectionString("medical-record-event-store")
 builder.Services.AddDbContext<MedicalRecordEventStoreContext>(options => options.UseNpgsql(connection));
 builder.Services.AddScoped<IMedicalRecordRepository, MedicalRecordRepository>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
-//builder.Services.AddScoped<IQuestionnaireRepository, QuestionnaireRepository>();
 
 builder.Services.AddSingleton<PatientQuestionnaireReceiver>();
 builder.Services.AddSingleton<IRabbitMqReceiverService, RabbitMqReceiverService>();

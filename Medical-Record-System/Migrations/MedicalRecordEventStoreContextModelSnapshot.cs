@@ -57,40 +57,6 @@ namespace Medical_Record_System.Migrations
                     b.ToTable("events", (string)null);
                 });
 
-            modelBuilder.Entity("Medical_Record_System.Questionnaire", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Answer")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("answer");
-
-                    b.Property<DateTime>("InsertedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp(6) without time zone")
-                        .HasColumnName("inserted_at")
-                        .HasDefaultValueSql("statement_timestamp()");
-
-                    b.Property<string>("Question")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("question");
-
-                    b.Property<Guid>("Uuid")
-                        .HasColumnType("uuid")
-                        .HasColumnName("uuid");
-
-                    b.HasKey("Id")
-                        .HasName("questionnaire_pkey");
-
-                    b.ToTable("questionnaires", (string)null);
-                });
 #pragma warning restore 612, 618
         }
     }
