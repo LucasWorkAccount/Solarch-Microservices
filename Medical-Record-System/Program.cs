@@ -1,8 +1,12 @@
+using System.Text;
 using System.Text.Json.Nodes;
 using Medical_Record_System;
 using Medical_Record_System.RabbitMq;
 using Medical_Record_System.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +26,23 @@ builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddSingleton<PatientQuestionnaireReceiver>();
 builder.Services.AddSingleton<IRabbitMqReceiverService, RabbitMqReceiverService>();
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -32,36 +53,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/medical-records/{uuid}", async (string uuid, IMedicalRecordRepository medicalRecordRepository) =>
+app.MapGet("/medical-records/{uuid}",[Authorize(Roles = "Doctor")] async (string uuid, IMedicalRecordRepository medicalRecordRepository) =>
     {
         return Results.Ok(await medicalRecordRepository.GetMedicalRecordByUuid(new Guid(uuid)));
     })
     .WithName("GetMedicalRecordByUuid")
     .WithOpenApi();
 
-app.MapPost("medical-records", async (HttpRequest request, IEventRepository eventRepository) =>
-    {
-        using var reader = new StreamReader(request.Body);
-        var json = JsonNode.Parse(await reader.ReadToEndAsync());
-        var uuid = Guid.NewGuid();
-        json!["uuid"] = uuid.ToString();
-        
-        var @event = new Event
-        {
-            Uuid = uuid,
-            Body = json.ToJsonString(),
-            Type = "MedicalRecordCreated",
-            InsertedAt = DateTime.Now
-        };
 
-        await eventRepository.CreateEvent(@event);
-        
-        return Results.Ok("Medical record successfully initialised!");
-    })
-    .WithName("CreateMedicalRecord")
-    .WithOpenApi();
-
-app.MapPut("medical-records/{uuid}", async (string uuid, HttpRequest request, IEventRepository eventRepository) =>
+app.MapPut("medical-records/{uuid}", [Authorize(Roles = "Doctor")] async (string uuid, HttpRequest request, IEventRepository eventRepository) =>
     {
         using var reader = new StreamReader(request.Body);
         var json = JsonNode.Parse(await reader.ReadToEndAsync());

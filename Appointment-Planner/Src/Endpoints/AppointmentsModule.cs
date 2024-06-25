@@ -2,6 +2,7 @@
 using System.Text.Json.Nodes;
 using Appointment_Planner.Entities;
 using Appointment_Planner.Repositories;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Appointment_Planner.Endpoints;
 
@@ -10,6 +11,7 @@ public static class AppointmentsModule
     public static IEndpointRouteBuilder MapAppointmentEndpoints(this IEndpointRouteBuilder endpoints)
     {
         endpoints.MapGet("/appointments",
+                [Authorize(Roles = "Receptionist")]
                 async (string? patientUuid, IAppointmentRepository appointmentRepository) =>
                 {
                     var appointments =
@@ -26,6 +28,7 @@ public static class AppointmentsModule
             .WithOpenApi();
 
         endpoints.MapPost("/appointments",
+                [Authorize(Roles = "Practitioner")]
                 async (AppointmentEmail email, IAppointmentRepository appointmentRepository,
                     IRabbitMqSenderService senderService) =>
                 {
@@ -57,6 +60,7 @@ public static class AppointmentsModule
 
 
         endpoints.MapPost("/appointments/{referral}",
+                [Authorize(Roles = "Patient")]
                 async (string referral, HttpRequest request, IAppointmentRepository appointmentRepository) =>
                 {
                     using var reader = new StreamReader(request.Body);
@@ -83,6 +87,7 @@ public static class AppointmentsModule
 
 
         endpoints.MapPost("/appointments/followup/{referral}",
+                [Authorize(Roles = "Receptionist")]
                 async (string referral, HttpRequest request, IAppointmentRepository appointmentRepository) =>
                 {
                     using var reader = new StreamReader(request.Body);
@@ -122,6 +127,7 @@ public static class AppointmentsModule
 
 
         endpoints.MapPut("/appointments/reschedule/{referral}",
+                [Authorize(Roles = "Receptionist,Patient,Doctor")]
                 async (string referral, HttpRequest request, IAppointmentRepository appointmentRepository) =>
                 {
                     using var reader = new StreamReader(request.Body);
@@ -153,6 +159,7 @@ public static class AppointmentsModule
 
 
         endpoints.MapPut("/appointments/arrival/{referral}",
+                [Authorize(Roles = "Receptionist")]
                 async (string referral, HttpRequest request, IAppointmentRepository appointmentRepository,
                     IRabbitMqSenderService senderService) =>
                 {
