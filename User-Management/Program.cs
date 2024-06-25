@@ -19,6 +19,7 @@ var connection = configManager.GetConnectionString("user-management-db");
 builder.Services.AddDbContext<UserManagementDbContext>(options => options.UseNpgsql(connection));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IRabbitMqSenderService, RabbitMqSenderSenderService>();
+builder.Services.AddSingleton<RabbitMQTransferralPatientReceiver>();
 
 var app = builder.Build();
 
@@ -89,5 +90,12 @@ app.MapPost("/login", async (LoginUser user, IUserRepository userRepository) =>
     })
     .WithName("Login")
     .WithOpenApi();
+
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    var scope = app.Services.CreateScope();
+    var patientTransferralReceiver = scope.ServiceProvider.GetRequiredService<RabbitMQTransferralPatientReceiver>();
+    Task.Run(() => patientTransferralReceiver.Receiver());
+});
 
 app.Run();
