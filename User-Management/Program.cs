@@ -68,7 +68,7 @@ app.MapPost("/register",
                 user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
 
                 await userRepository.AddUser(user);
-                if (user.Role == "patient")
+                if (user.Role == "Patient")
                 {
                     var MRSUser = new
                     {

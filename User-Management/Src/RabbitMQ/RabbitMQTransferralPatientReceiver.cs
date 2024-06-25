@@ -11,10 +11,12 @@ public class RabbitMQTransferralPatientReceiver
 {
     private ConnectionFactory _factory;
     private IUserRepository _userRepository;
+    private IRabbitMqSenderService _rabbitMqService;
 
-    public RabbitMQTransferralPatientReceiver(IUserRepository userRepository)
+    public RabbitMQTransferralPatientReceiver(IUserRepository userRepository, IRabbitMqSenderService rabbitMqService)
     {
         _userRepository = userRepository;
+        _rabbitMqService = rabbitMqService;
         _factory = new ConnectionFactory();
     }
 
@@ -73,14 +75,17 @@ public class RabbitMQTransferralPatientReceiver
         }
         else
         {
-            RegisterUser newRegisteredUser = new RegisterUser();
-            newRegisteredUser.Uuid = newUser.Uuid;
-            newRegisteredUser.Name = firstname + " " + lastname;
-            newRegisteredUser.Sex = "X";
-            newRegisteredUser.Age = -1;
-            newRegisteredUser.Bsn = "";
+            var MRSUser = new
+            {
+                uuid = newUser.Uuid,
+                name = firstname + " " + lastname,
+                sex = "X",
+                age = -1,
+                bsn = "N/A"
+            };
         
             await _userRepository.AddUser(newUser);
+            _rabbitMqService.Send("Medical-record-system-register", JsonSerializer.Serialize(MRSUser));
         }
     }
 }
