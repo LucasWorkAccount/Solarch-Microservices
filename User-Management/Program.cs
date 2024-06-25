@@ -91,6 +91,27 @@ app.MapPost("/login", async (LoginUser user, IUserRepository userRepository) =>
     .WithName("Login")
     .WithOpenApi();
 
+app.MapPut("/identify", async (IdUser user, IUserRepository userRepository) =>
+    {
+        try
+        {
+            var userId = await userRepository.FindUserByEmail(user.Email);
+            userId.IsIdentified = true;
+            await userRepository.EditUser(userId);
+            return Results.Json(new
+            {
+                status = 200,
+                message = "Patient successfully identified",
+            });
+        }
+        catch (Exception e)
+        {
+            return Results.BadRequest(e.Message);
+        }
+    })
+    .WithName("identify")
+    .WithOpenApi();
+
 app.Lifetime.ApplicationStarted.Register(() =>
 {
     var scope = app.Services.CreateScope();
