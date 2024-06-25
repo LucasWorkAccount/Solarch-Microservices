@@ -20,7 +20,6 @@ public class RabbitMqSenderSenderService: IRabbitMqSenderService
 
     public void Send(string queueName, string message)
     {
-        Thread.Sleep(30000);
         _connection = _factory.CreateConnection();
         _channel = _connection.CreateModel();
 
