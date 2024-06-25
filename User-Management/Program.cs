@@ -1,7 +1,11 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using User_Management.Model;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +22,24 @@ var connection = configManager.GetConnectionString("user-management-db");
 builder.Services.AddDbContext<UserManagementDbContext>(options => options.UseNpgsql(connection));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IRabbitMqSenderService, RabbitMqSenderSenderService>();
+
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -90,7 +112,7 @@ app.MapPost("/login", async (LoginUser user, IUserRepository userRepository) =>
     .WithOpenApi();
 
 
-app.MapPut("/identify", async (IdUser user, IUserRepository userRepository) =>
+app.MapPut("/identify", [Authorize(Roles = "Receptionist")] async (IdUser user, IUserRepository userRepository) =>
     {
         try
         {
