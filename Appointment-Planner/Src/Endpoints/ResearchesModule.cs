@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Appointment_Planner.Entities;
 using Appointment_Planner.Repositories;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Appointment_Planner.Endpoints;
 
@@ -9,7 +10,7 @@ public static class ResearchesModule
     public static IEndpointRouteBuilder MapResearchEndpoints(this IEndpointRouteBuilder endpoints)
     {
         endpoints.MapPost("/research-results-to-practitioner",
-                (ResearchResults researchResults, IRabbitMqSenderService senderService) =>
+                [Authorize(Roles = "Doctor")](ResearchResults researchResults, IRabbitMqSenderService senderService) =>
                 {
                     try
                     {
@@ -27,8 +28,9 @@ public static class ResearchesModule
                             message = "Email sent to general practitioner successfully!"
                         });
                     }
-                    catch
+                    catch (Exception e)
                     {
+                        Console.WriteLine(e.ToString());
                         return Results.Json(new
                         {
                             status = 400,
@@ -41,7 +43,7 @@ public static class ResearchesModule
 
 
         endpoints.MapPost("/request-research",
-                (ResearchRequest researchRequest, IRabbitMqSenderService senderService) =>
+                [Authorize(Roles = "Doctor")](ResearchRequest researchRequest, IRabbitMqSenderService senderService) =>
                 {
                     try
                     {
@@ -80,7 +82,7 @@ public static class ResearchesModule
             .WithOpenApi();
 
         endpoints.MapPost("/send-recipe",
-                (RecipeRequest recipeRequest, IRabbitMqSenderService senderService) =>
+                [Authorize(Roles = "Doctor")](RecipeRequest recipeRequest, IRabbitMqSenderService senderService) =>
                 {
                     try
                     {
