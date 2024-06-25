@@ -3,25 +3,24 @@
     public class CsvDataReader
     {
 
-        public List<string[]> GetDataFromCsv()
+        public async Task<List<string>> GetDataFromCsv()
         {
-            List<string[]> rows = new List<string[]>();
+            string url = "https://marcavans.blob.core.windows.net/solarch/fake_customer_data_export.csv?sv=2023-01-03&st=2024-06-14T10%3A31%3A07Z&se=2032-06-15T10%3A31%3A00Z&sr=b&sp=r&sig=q4Ie3kKpguMakW6sbcKl0KAWutzpMi747O4yIr8lQLI%3D";
+            List<string> lines = new List<string>();
             
-            string[] lines = File.ReadAllLines("Src/Files/patient_transferral_data_export.csv");
-            
-            // string currentDirectory = Directory.GetCurrentDirectory();
-            //
-            // string csvFilePath = Path.Combine(currentDirectory, "Src/Files/patient_transferral_data_export.csv");
-            //
-            // string[] lines = File.ReadAllLines(csvFilePath);
-
-            foreach (string line in lines)
+            using (HttpClient client = new HttpClient())
             {
-                string[] fields = line.Split(',');
-                rows.Add(fields);
+                try
+                {
+                    string result = await client.GetStringAsync(url);
+                    lines = result.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("An error occurred: " + ex.Message);
+                }
             }
-
-            return rows;
+            return lines;
         }
     } 
 }

@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Medical_Record_System.RabbitMq;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +23,7 @@ var connection = configManager.GetConnectionString("user-management-db");
 builder.Services.AddDbContext<UserManagementDbContext>(options => options.UseNpgsql(connection));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IRabbitMqSenderService, RabbitMqSenderSenderService>();
+builder.Services.AddSingleton<RabbitMQTransferralPatientReceiver>();
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -111,7 +113,6 @@ app.MapPost("/login", async (LoginUser user, IUserRepository userRepository) =>
     .WithName("Login")
     .WithOpenApi();
 
-
 app.MapPut("/identify", [Authorize(Roles = "Receptionist")] async (IdUser user, IUserRepository userRepository) =>
     {
         try
@@ -119,12 +120,10 @@ app.MapPut("/identify", [Authorize(Roles = "Receptionist")] async (IdUser user, 
             var userId = await userRepository.FindUserByEmail(user.Email);
             userId.IsIdentified = true;
             await userRepository.EditUser(userId);
-
             return Results.Json(new
             {
                 status = 200,
                 message = "Patient successfully identified",
-
             });
         }
         catch (Exception e)
@@ -135,5 +134,11 @@ app.MapPut("/identify", [Authorize(Roles = "Receptionist")] async (IdUser user, 
     .WithName("identify")
     .WithOpenApi();
 
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    var scope = app.Services.CreateScope();
+    var patientTransferralReceiver = scope.ServiceProvider.GetRequiredService<RabbitMQTransferralPatientReceiver>();
+    Task.Run(() => patientTransferralReceiver.Receiver());
+});
 
 app.Run();

@@ -97,8 +97,10 @@
       dockerfile: patient-transferral-system/Dockerfile
     networks:
       - medical-record-system
+    volumes:
+      - /app/patient_transferral_data_export.csv:/app/patient_transferral_data_export.csv
 
-  rabbitmq:
+  rabbitmq: 
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:

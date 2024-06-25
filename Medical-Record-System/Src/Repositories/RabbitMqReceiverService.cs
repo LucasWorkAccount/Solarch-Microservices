@@ -67,7 +67,7 @@ public class RabbitMqReceiverService: IRabbitMqReceiverService
             var waitHandle = new ManualResetEvent(false);
             waitHandle.WaitOne();
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Console.WriteLine(e.Message);
         }
