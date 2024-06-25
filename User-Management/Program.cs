@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Medical_Record_System.RabbitMq;
 using Microsoft.EntityFrameworkCore;
 using User_Management.Model;
 
@@ -88,30 +89,5 @@ app.MapPost("/login", async (LoginUser user, IUserRepository userRepository) =>
     })
     .WithName("Login")
     .WithOpenApi();
-
-
-app.MapPut("/identify", async (IdUser user, IUserRepository userRepository) =>
-    {
-        try
-        {
-            var userId = await userRepository.FindUserByEmail(user.Email);
-            userId.IsIdentified = true;
-            await userRepository.EditUser(userId);
-
-            return Results.Json(new
-            {
-                status = 200,
-                message = "Patient successfully identified",
-
-            });
-        }
-        catch (Exception e)
-        {
-            return Results.BadRequest(e.Message);
-        }
-    })
-    .WithName("identify")
-    .WithOpenApi();
-
 
 app.Run();

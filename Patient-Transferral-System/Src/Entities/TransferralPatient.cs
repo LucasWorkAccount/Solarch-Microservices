@@ -1,13 +1,13 @@
 ﻿namespace Patient_Transferral_System.Entities
 {
-    public class Patient
+    public class TransferralPatient
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string PhoneNumber { get; set; }
         public string Address { get; set; }
 
-        public Patient(string FirstName, string LastName, string PhoneNumber, string Address)
+        public TransferralPatient(string FirstName, string LastName, string PhoneNumber, string Address)
         {
             this.FirstName = FirstName;
             this.LastName = LastName;
